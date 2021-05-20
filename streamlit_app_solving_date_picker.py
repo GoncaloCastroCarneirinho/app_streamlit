@@ -40,9 +40,9 @@ column_4, column_5 = st.beta_columns(2)
 
 if view_mode == 'Resume':
     
-    date_1 = column_1.date_input('Start date:', df.index.min(), df.index.min(), df.index.max())
+    date_1 = column_1.date_input('Start date:', df.index.min(), df.index.min(), datetime.date.today())
 
-    date_2 = column_3.date_input('End date:', None, date_1+timedelta(days=1), datetime.date.today())
+    date_2 = column_3.date_input('End date:', df.index.max(), date_1+timedelta(days=1), datetime.date.today())
         
     def df_filter_date(message, df):
  
