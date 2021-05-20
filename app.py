@@ -13,6 +13,8 @@ from datetime import timedelta, date, time
 
 import datetime
 
+st.set_page_config(layout="wide")
+
 df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
 
 def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
