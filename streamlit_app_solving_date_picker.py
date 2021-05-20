@@ -23,8 +23,8 @@ import pandas as pd
 
 st.set_page_config(layout="wide")
 
-#df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')
-df = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')
+df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')
+#df = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')
 
 st.title('Datetime Filter')
     
@@ -42,12 +42,13 @@ if view_mode == 'Resume':
     
     date_1 = column_1.date_input('Start date:', df.index.min(), df.index.min(), datetime.date.today())
 
-    date_2 = column_3.date_input('End date:', df.index.max(), date_1+timedelta(days=1), datetime.date.today())
+    date_2 = column_3.date_input('End date:', df.index.min(), date_1+timedelta(days=1), datetime.date.today())
         
     def df_filter_date(message, df):
  
         filtered_df_date = df.loc[date_1:date_2]
 
+        return filtered_df_date
  
     filtered_df_date = df_filter_date('Select dates range to filter dataframe',df)
     
