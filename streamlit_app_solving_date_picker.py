@@ -36,15 +36,15 @@ with column_1:
     #temp_humi = st.multiselect("Select variable: ", df.columns.tolist())
     view_mode = st.radio("View mode:", ('Live', 'Resume')) ###
     
-column_1, column_3 = st.beta_columns([1,1])
+column_3, column_4 = st.beta_columns([1,1])
 
-column_4, column_5 = st.beta_columns(2)     
+column_5, column_6 = st.beta_columns(2)     
 
 if view_mode == 'Resume':
     
-    date_1 = column_1.date_input('Start date:', df.index.min(), df.index.min(), datetime.date.today())
+    date_1 = column_3.date_input('Start date:', df.index.min(), df.index.min(), datetime.date.today())
 
-    date_2 = column_3.date_input('End date:', df.index.max(), date_1+timedelta(days=1), datetime.date.today())
+    date_2 = column_4.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today())
         
     def df_filter_date(message, df):
  
@@ -56,11 +56,11 @@ if view_mode == 'Resume':
     
     temp_humi = column_2.multiselect("Select variable: ", df.columns.tolist())
 
-    column_4.title('Data Table')
-    column_4.write(filtered_df_date[temp_humi])
+    column_5.title('Data Table')
+    column_5.write(filtered_df_date[temp_humi])
 
-    column_5.title('Data Chart')
-    column_5.line_chart(filtered_df_date[temp_humi])
+    column_6.title('Data Chart')
+    column_6.line_chart(filtered_df_date[temp_humi])
         
 elif view_mode == 'Live':
     
@@ -70,29 +70,31 @@ elif view_mode == 'Live':
     
     len_=len(temp_humi)
     real_tail = deque() ###
+    real_tail2 = deque()
     
     if(len(temp_humi)>0):
         i=1
         st.title('+1')
     
-    column_1.empty()
-    column_1.empty()
     column_3.empty()
     column_3.empty()
     column_4.empty()
     column_4.empty()
-    column_5.empty() 
     column_5.empty()
+    column_5.empty()
+    column_6.empty() 
+    column_6.empty()
     
     while True:
         # Get some data.
         data2 = np.array({})
         data3 = np.array((np.random.randint(0,20)),int)
         real_tail.append(data3) ##
+        real_tail2.append(data3)
         chart_data = pd.DataFrame(
              real_tail,
              columns = temp_humi
-             )
+        )
         chart = st.line_chart(chart_data)
         if(temp_humi is None or len(temp_humi)==0):
             chart = st.line_chart({})
