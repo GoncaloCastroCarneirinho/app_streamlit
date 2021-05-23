@@ -13,7 +13,9 @@ import pandas as pd
 
 from collections import deque
 
-from datetime import timedelta, date, time
+from datetime import timedelta, date
+
+import time
 
 import datetime
 
