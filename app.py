@@ -50,11 +50,11 @@ if view_mode == 'Resume':
     
     temp_humi = column_2.multiselect("Select variable: ", df.columns.tolist())
     
-    column_5.title('Data Table')
-    column_5.write(filtered_df_date[temp_humi])
+    Data_table_title = column_5.title('Data Table')
+    Data_table = column_5.write(filtered_df_date[temp_humi])
     
-    column_6.title('Data Chart')
-    column_6.line_chart(filtered_df_date[temp_humi])
+    Data_chart_title = column_6.title('Data Chart')
+    Data_chart = column_6.line_chart(filtered_df_date[temp_humi])
     
     #Información de las fechas y horarios seleccionados
     st.info('Start: **%s** End: **%s**' % (date_1, date_2))   
@@ -93,11 +93,12 @@ elif view_mode == 'Live':
              columns = temp_humi
         )
         
-        chart = st.line_chart(chart_data)
-        
         if(temp_humi is None or len(temp_humi)==0):
+            time.sleep(1) #necesario para que la aplicación arranque sin dar error de 
+                          #'empty chart'
             chart = st.line_chart({})
         else:
+            chart = st.line_chart(chart_data)
             time.sleep(1)
             chart.empty()
             chart.empty()
