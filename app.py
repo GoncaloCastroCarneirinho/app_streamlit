@@ -57,7 +57,7 @@ if view_mode == 'Resume':
     Data_chart = column_6.line_chart(filtered_df_date[temp_humi])
     
     #Información de las fechas y horarios seleccionados
-    st.info('Start: **%s** End: **%s**' % (date_1, date_2))   
+    #st.info('Start: **%s** End: **%s**' % (date_1, date_2))   
  
 elif view_mode == 'Live':
     
@@ -93,12 +93,16 @@ elif view_mode == 'Live':
              columns = temp_humi
         )
         
+        column_7, column_8 = st.beta_columns((6,2)) 
+        
         if(temp_humi is None or len(temp_humi)==0):
             time.sleep(1) #necesario para que la aplicación arranque sin dar error de 
                           #'empty chart'
             chart = st.line_chart({})
         else:
-            chart = st.line_chart(chart_data)
-            time.sleep(1)
+            chart = column_7.line_chart(chart_data)
+            data_table = column_8.dataframe(chart_data)
+            time.sleep(20)
             chart.empty()
             chart.empty()
+            data_table.empty()
