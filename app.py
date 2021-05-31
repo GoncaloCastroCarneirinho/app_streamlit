@@ -34,7 +34,7 @@ view_mode = column_1.radio("View mode:", ('Live', 'Resume', 'Data Table'))
 
 column_3, column_4 = st.beta_columns([1,1])
 
-column_5, column_6 = st.beta_columns((2,5)) 
+column_5, column_6, column_7 = st.beta_columns((2,3,3)) 
 
 if view_mode == 'Resume':
     
@@ -52,15 +52,26 @@ if view_mode == 'Resume':
     filtered_df_date = df_filter_date('Select dates range to filter dataframe',df)
     
     df_1=df.loc[date_1:date_2]
-    df_1.index=df_1.index.strftime("%H:%M")
+    df_1.index=df_1.index.strftime("%d/%m-%H:%M")
+    
+    #df_2=df.filter(items=df.columns[[0,1,2]])
     
     temp_humi = column_2.multiselect("Select variable: ", df.columns.tolist())
+    
+    #temp_humi1=[temp_humi.index('CH1:M1-TEMP'),temp_humi.index('CH2:M1-RH')]
+    
+    #temp_humi1=temp_humi[0]
     
     Data_table_title = column_5.title('Data Table')
     Data_table = column_5.write(df_1[temp_humi])
     
-    Data_chart_title = column_6.title('Data Chart')
-    Data_chart = column_6.line_chart(filtered_df_date[temp_humi])
+    Data_chart_title = column_6.title('Temperature')
+    #st.markdown('<h1><style>{color: red;}safbfnfb</style></h1>', unsafe_allow_html=True)
+    #st.markdown("<h1 style='text-align: center; color: red;'>Some title</h1>", unsafe_allow_html=True)
+    Data_chart = column_6.line_chart(filtered_df_date[temp_humi[0::2]])
+    Data_chart1_title = column_7.title('Relative Humidity')
+    Data_chart1 = column_7.line_chart(filtered_df_date[temp_humi[1::2]])
+
     
     #Información de las fechas y horarios seleccionados
     #st.info('Start: **%s** End: **%s**' % (date_1, date_2))   
@@ -86,7 +97,7 @@ if view_mode == 'Live':
 
     status_text=st.empty()
     
-    while True and view_mode=='Live':
+    while True:
         
         j=0
         
@@ -116,7 +127,7 @@ if view_mode == 'Live':
             chart = st.line_chart(chart_data)
             status_text.table(df1.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2))
             
-            for j in range(10):
+            for j in range(1):
                 time.sleep(1)
                 st.empty()
                 
