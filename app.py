@@ -26,72 +26,61 @@ st.set_page_config(layout="wide")
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
 df = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')
 
-column_1, column_2 = st.beta_columns((1,2))
+column_1, column_2, column_0 = st.beta_columns((1,4,4))
 
 i=0
 
-view_mode = column_1.radio("View mode:", ('Live', 'Resume', 'Data Table'))
-
-column_3, column_4 = st.beta_columns([1,1])
-
-column_5, column_6, column_7 = st.beta_columns((2,3,3)) 
+view_mode = column_1.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table'))
 
 if view_mode == 'Resume':
     
-    date_1 = column_3.date_input('Start date:', df.index.min(), df.index.min(), df.index.max())
+    temp_humi_00 = column_2.multiselect("SELECT FIRST SET OF VARIABLES TO PLOT", df.columns.tolist())
     
-    date_2 = column_4.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today())
+    column_2.markdown("<p style='display: block; text-align: center; font-size: 18px; font-family: calibri; font-weight: bold'>VARIABLES SET 1 SELECTED: "+str(len(temp_humi_00)), unsafe_allow_html=True,)
+    
+    temp_humi_01 = column_0.multiselect("SELECT SECOND SET OF VARIABLES TO PLOT", df.columns.tolist())
+    
+    column_0.markdown("<p style='display: block; text-align: center; font-size: 18px; font-family: calibri; font-weight: bold'>VARIABLES SET 2 SELECTED: "+str(len(temp_humi_01)), unsafe_allow_html=True,)
+    
+    column_3, column_4 = st.beta_columns([1,1])
+    
+    column_5, column_6, column_7 = st.beta_columns((1,4,4))
+    
+    date_1_resume = column_3.date_input('Start date:', df.index.min(), df.index.min(), df.index.max())
+    
+    date_2_resume = column_4.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today())
 
     def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
     
-        filtered_df_date = df.loc[date_1:date_2]#Se filtra el Dataframe df, pasado como 
+        filtered_df_date = df.loc[date_1_resume:date_2_resume]#Se filtra el Dataframe df, pasado como 
                                                 #argumento entre los valores date_1 y date_2
 
         return filtered_df_date#Se devuelve el Dataframe filtrado
     
     filtered_df_date = df_filter_date('Select dates range to filter dataframe',df)
     
-    df_1=df.loc[date_1:date_2]
+    df_1=df.loc[date_1_resume:date_2_resume]
     df_1.index=df_1.index.strftime("%d/%m-%H:%M")
     
-    #df_2=df.filter(items=df.columns[[0,1,2]])
-    
-    temp_humi = column_2.multiselect("Select variable: ", df.columns.tolist())
-    
-    #temp_humi1=[temp_humi.index('CH1:M1-TEMP'),temp_humi.index('CH2:M1-RH')]
-    
-    #temp_humi1=temp_humi[0]
-    
-    Data_table_title = column_5.title('Data Table')
-    Data_table = column_5.write(df_1[temp_humi])
-    
-    Data_chart_title = column_6.title('Temperature')
-    #st.markdown('<h1><style>{color: red;}safbfnfb</style></h1>', unsafe_allow_html=True)
-    #st.markdown("<h1 style='text-align: center; color: red;'>Some title</h1>", unsafe_allow_html=True)
-    Data_chart = column_6.line_chart(filtered_df_date[temp_humi[0::2]])
-    Data_chart1_title = column_7.title('Relative Humidity')
-    Data_chart1 = column_7.line_chart(filtered_df_date[temp_humi[1::2]])
+    Data_chart_title = column_6.markdown("<p style='display: block; text-align: center; font-size: 28px; font-family: calibri; font-weight: bold'>SET 1 ON RESUME MODE</p>", unsafe_allow_html=True,)
 
-    
-    #Información de las fechas y horarios seleccionados
-    #st.info('Start: **%s** End: **%s**' % (date_1, date_2))   
+    Data_chart = column_6.line_chart(filtered_df_date[temp_humi_00])
  
+    Data_chart1_title = column_7.markdown("<p style='display: block; text-align: center; font-size: 28px; font-family: calibri; font-weight: bold'>SET 2 ON RESUME MODE</p>", unsafe_allow_html=True,)
+    
+    Data_chart1 = column_7.line_chart(filtered_df_date[temp_humi_01])
+
 if view_mode == 'Live':
+
+    temp_humi_10 = column_0.multiselect("", df.columns.tolist())
     
-    temp_humi = column_2.multiselect("Select variable: ", df.columns.tolist())
-    
-    len_=len(temp_humi)
+    column_2.write('')
+    column_2.write('')
+    column_2.markdown("<p style='display: block; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT VARIABLES ON LIVE MODE: ", unsafe_allow_html=True,)
+
+    len_=len(temp_humi_10)
     data_tail = deque()
     time_tail = deque()
-    
-    column_3.empty()
-    column_3.empty()
-    column_4.empty()
-    column_4.empty()
-    column_5.empty()
-    column_5.empty()
-    column_6.empty() 
-    column_6.empty()
     
     i=0
 
@@ -104,26 +93,25 @@ if view_mode == 'Live':
         if(i<(len(df)-1)):
             i=i+1
             
-        data_tail.append(df[temp_humi].values[i]) ##
+        data_tail.append(df[temp_humi_10].values[i]) ##
         time_tail.append(df.index[i])
         
         chart_data = pd.DataFrame(
              data_tail,
              index = time_tail,
-             columns = temp_humi
+             columns = temp_humi_10
         )
         
         df1 = pd.DataFrame(
-            [df[temp_humi].values[i]],
+            [df[temp_humi_10].values[i]],
             index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')],
-            columns = temp_humi)
+            columns = temp_humi_10)
         
-        if(temp_humi is None or len(temp_humi)==0):
+        if(temp_humi_10 is None or len(temp_humi_10)==0):
             time.sleep(1) #necesario para que la aplicación arranque sin dar error de 
                           #'empty chart'
             chart = st.line_chart({})
         else:
-            #status_text.text(str(temp_humi) + str(df[temp_humi].values[i]))
             chart = st.line_chart(chart_data)
             status_text.table(df1.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2))
             
@@ -136,7 +124,28 @@ if view_mode == 'Live':
             #data_table.empty()
             
 if view_mode == 'Data Table':
-    view_mode='Data Table'
     
+    column_0.markdown("""<a style='display: block; text-align: center; font-size: 60px; font-family: calibri; font-weight: bold'>ALL SET OF VARIABLES</a>""", unsafe_allow_html=True,)
+    
+    column_2.markdown("""<a style='display: block; text-align: center; font-size: 60px; font-family: calibri; font-weight: bold'>DATA TABLE MODE</a>""", unsafe_allow_html=True,)
+
+    column_34, column_3, column_4 = st.beta_columns([1,2,2])   
+    
+    column_34.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 33px; font-family: calibri; font-weight: bold'>PICK DATE RANGE: </a>""", unsafe_allow_html=True,)
+    
+    date_1_table = column_3.date_input('Start date:', df.index.min(), df.index.min(), df.index.max())
+    
+    date_2_table = column_4.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today())
+
+    def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
+    
+        filtered_df_date = df.loc[date_1_table:date_2_table]#Se filtra el Dataframe df, pasado como 
+                                                            #argumento entre los valores date_1 y date_2
+
+        return filtered_df_date#Se devuelve el Dataframe filtrado
+    
+    filtered_df_date = df_filter_date('Select dates range to filter dataframe',df)
+    
+    df_1=df.loc[date_1_table:date_2_table]
     df.index=df.index.strftime("%m/%d/%y\n%H:%M:%S")
-    data_table = st.table(df)
+    data_table = st.table(df.style.set_precision(2))
