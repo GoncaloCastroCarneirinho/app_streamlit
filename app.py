@@ -42,7 +42,9 @@ if view_mode == 'Resume':
     
     column_0.markdown("<p style='display: block; text-align: center; font-size: 18px; font-family: calibri; font-weight: bold'>VARIABLES SET 2 SELECTED: "+str(len(temp_humi_01)), unsafe_allow_html=True,)
     
-    column_3, column_4 = st.beta_columns([1,1])
+    column_34, column_3, column_4 = st.beta_columns([1,2,2])
+    
+    column_34.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 33px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</a>""", unsafe_allow_html=True,)
     
     column_5, column_6, column_7 = st.beta_columns((1,4,4))
     
@@ -62,11 +64,11 @@ if view_mode == 'Resume':
     df_1=df.loc[date_1_resume:date_2_resume]
     df_1.index=df_1.index.strftime("%d/%m-%H:%M")
     
-    Data_chart_title = column_6.markdown("<p style='display: block; text-align: center; font-size: 28px; font-family: calibri; font-weight: bold'>SET 1 ON RESUME MODE</p>", unsafe_allow_html=True,)
+    Data_chart_title = column_6.markdown("<p style='display: block; text-align: center; font-size: 28px; font-family: calibri; font-weight: bold'>SET 1 ON RESUME GRAPH</p>", unsafe_allow_html=True,)
 
     Data_chart = column_6.line_chart(filtered_df_date[temp_humi_00])
  
-    Data_chart1_title = column_7.markdown("<p style='display: block; text-align: center; font-size: 28px; font-family: calibri; font-weight: bold'>SET 2 ON RESUME MODE</p>", unsafe_allow_html=True,)
+    Data_chart1_title = column_7.markdown("<p style='display: block; text-align: center; font-size: 28px; font-family: calibri; font-weight: bold'>SET 2 ON RESUME GRAPH</p>", unsafe_allow_html=True,)
     
     Data_chart1 = column_7.line_chart(filtered_df_date[temp_humi_01])
 
@@ -74,9 +76,7 @@ if view_mode == 'Live':
 
     temp_humi_10 = column_0.multiselect("", df.columns.tolist())
     
-    column_2.write('')
-    column_2.write('')
-    column_2.markdown("<p style='display: block; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT VARIABLES ON LIVE MODE: ", unsafe_allow_html=True,)
+    column_2.markdown("<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 28.5px; font-family: calibri; font-weight: bold'>SELECT SET OF VARIABLES TO PLOT LIVE</p>", unsafe_allow_html=True,)
 
     len_=len(temp_humi_10)
     data_tail = deque()
@@ -125,13 +125,15 @@ if view_mode == 'Live':
             
 if view_mode == 'Data Table':
     
-    column_0.markdown("""<a style='display: block; text-align: center; font-size: 60px; font-family: calibri; font-weight: bold'>ALL SET OF VARIABLES</a>""", unsafe_allow_html=True,)
+    #column_0.markdown("""<a style='display: block; text-align: center; font-size: 60px; font-family: calibri; font-weight: bold'>ALL SET OF VARIABLES</a>""", unsafe_allow_html=True,)
     
-    column_2.markdown("""<a style='display: block; text-align: center; font-size: 60px; font-family: calibri; font-weight: bold'>DATA TABLE MODE</a>""", unsafe_allow_html=True,)
+    temp_humi_00 = column_0.multiselect("", df.columns.tolist())
+    
+    column_2.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 28.5px; font-family: calibri; font-weight: bold'>SELECT SET OF VARIABLES TO SHOW ON TABLE</a>""", unsafe_allow_html=True,)
 
     column_34, column_3, column_4 = st.beta_columns([1,2,2])   
     
-    column_34.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 33px; font-family: calibri; font-weight: bold'>PICK DATE RANGE: </a>""", unsafe_allow_html=True,)
+    column_34.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 33px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</a>""", unsafe_allow_html=True,)
     
     date_1_table = column_3.date_input('Start date:', df.index.min(), df.index.min(), df.index.max())
     
@@ -146,6 +148,10 @@ if view_mode == 'Data Table':
     
     filtered_df_date = df_filter_date('Select dates range to filter dataframe',df)
     
+    filtered_df_date.index=filtered_df_date.index.strftime("%d/%m/%y\n%H:%M:%S")
+    
     df_1=df.loc[date_1_table:date_2_table]
-    df.index=df.index.strftime("%m/%d/%y\n%H:%M:%S")
-    data_table = st.table(df.style.set_precision(2))
+    #df.index=df.index.strftime("%m/%d/%y\n%H:%M:%S")
+    #data_table = st.table(df.style.set_precision(2))
+    if len(temp_humi_00)>0:
+        data_table = st.table(filtered_df_date[temp_humi_00].style.set_precision(2))
