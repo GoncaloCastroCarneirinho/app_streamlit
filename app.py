@@ -13,23 +13,31 @@ import pandas as pd
 
 from collections import deque
 
-from datetime import timedelta, date
+from datetime import timedelta
 
 import time
 
 import datetime
 
-from threading import Event
-
 from lectura_equipos import lee_meteo
 
-leido = lee_meteo(pd.date_range(start='2021/05/23', end='2021/05/25', freq='1T'), path_estacion='dataLogger/')
+import base64
 
 st.set_page_config(layout="wide")
 
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
-df = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')
-#df = lee_fichero_sesion("meteo2021_05_23_.csv", path_sesiones='dataLogger')
+df0 = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')
+#df = pd.concat([df1,df0])
+# df.columns += '_meteo1'
+df1 =  lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/")
+#df = pd.concat([df0,df1], axis=1, join='outer')
+#df = df0.append(df1, sort=False)
+df = df0.merge(df1, right_index=True, left_index=True, how='outer')
+#df = df0.join(df1,how='outer')
+#df_meteo2 += '_meteo2'
+
+#df = df0.append(df1,ignore_index=True)
+#df = pd.concat([df1,df0], axis=1)
 
 column_1, column_2, column_0 = st.beta_columns([2,6,6])
 
@@ -37,22 +45,49 @@ i=0
 
 view_mode = column_1.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table'))
 
+main_bg = "logo_IES.jpg"
+main_bg_ext = "jpg"
+
+st.markdown(
+    f"""
+    <style>
+    .reportview-container {{
+        background-image: url(data:image/{main_bg_ext};base64,{base64.b64encode(open(main_bg, "rb").read()).decode()});
+        background-size: 100% 100%;
+        background-color: rgba(255,255,255,0.90);
+        background-blend-mode: lighten;
+    }}
+    .stButton>button{{
+    color: #11A27B;
+    box-sizing: 5%;
+    height: 5em;
+    width: 5em;
+    font-size:50px;
+    border: 7px solid;
+    border-radius: 10px;
+    padding: 30px;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 if view_mode == 'Live':
-      
-    temp_humi_10 = column_0.multiselect("", df.columns.tolist())
+       
+    temp_humi_live = column_0.multiselect("", df.columns.tolist())
     
-    sidebar_live = st.sidebar.beta_container()
-    
-    sidebar_live.empty()
+    sidebar_live = st.sidebar
     
     sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>VARIABLES SET", unsafe_allow_html=True,)
-
-    for col in temp_humi_10:
-        sidebar_live.write(col)
     
-    column_2.markdown("<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT SET OF VARIABLES TO PLOT LIVE</p>", unsafe_allow_html=True,)
+    for col in temp_humi_live:
+        sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
 
-    len_=len(temp_humi_10)
+    column_2.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT SET OF VARIABLES TO PLOT LIVE</p>""", unsafe_allow_html=True,)
+
+    # with column_2:
+    #     st.image("logo_upm.png",width=300) #añadirlo a la memoria 
+
     data_tail = deque()
     time_tail = deque()
     
@@ -67,23 +102,23 @@ if view_mode == 'Live':
         if(i<(len(df)-1)):
             i=i+1
             
-        data_tail.append(df[temp_humi_10].values[i]) ##
+        data_tail.append(df[temp_humi_live].values[i]) ##
         time_tail.append(df.index[i])
         
         chart_data = pd.DataFrame(
              data_tail,
              index = time_tail,
-             columns = temp_humi_10
-        )
+             columns = temp_humi_live
+             )
         
         df1 = pd.DataFrame(
-            [df[temp_humi_10].values[i]],
+            [df[temp_humi_live].values[i]],
             index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')],
-            columns = temp_humi_10)
+            columns = temp_humi_live
+            )
         
-        if(temp_humi_10 is None or len(temp_humi_10)==0):
-            time.sleep(1) #necesario para que la aplicación arranque sin dar error de 
-                          #'empty chart'
+        if(temp_humi_live is None or len(temp_humi_live)==0):
+            time.sleep(1) #necesario para que la aplicación arranque sin dar error de 'empty chart'
             chart = st.line_chart({})
         else:
             chart = st.line_chart(chart_data)
@@ -94,8 +129,7 @@ if view_mode == 'Live':
                 st.empty()
                 
             chart.empty()
-            chart.empty()
-            
+            chart.empty()            
 
 elif view_mode == 'Resume':
     
@@ -104,13 +138,9 @@ elif view_mode == 'Resume':
     sidebar_col1, sidebar_col2 = st.sidebar.beta_columns([1,1])
     
     sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>VARIABLES SET 1", unsafe_allow_html=True,)
-    
+
     sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>VARIABLES SET 2", unsafe_allow_html=True,)
-    
-    #temp_humi_00 = column_2.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist())
-    
-    #column_2.markdown("<p style='display: block; text-align: center; font-size: 18px; font-family: calibri; font-weight: bold'>VARIABLES SET 1 SELECTED: "+str(len(temp_humi_00)), unsafe_allow_html=True,)
-    
+
     with column2:
     
         temp_humi_00 = column_2.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist())
@@ -132,21 +162,21 @@ elif view_mode == 'Resume':
             
                 df_filt0 = df[[item for item in temp_humi_00 if 'TEMP' in item]]
                 for col in df_filt0:
-                    sidebar_col1.write(col)
+                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
                 df_filt0 = df[[item for item in temp_humi_00 if 'RH' in item]]
                 for col in df_filt0:
-                    sidebar_col1.write(col)
+                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
                         
             elif variables_set_0 == options_list_0:
             
                 if variables_set_0 == "FIRST TEMPERATURE SET":
                     df_filt0 = df[[item for item in df.columns if 'TEMP' in item]]
                     for col in df_filt0.columns:
-                        sidebar_col1.write(col)
+                        sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
                 elif variables_set_0 == "FIRST HUMIDITY SET":
                     df_filt0 = df[[item for item in df.columns if 'RH' in item]]
                     for col in df_filt0.columns:
-                        sidebar_col1.write(col)
+                        sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
     
     with column0:
     
@@ -167,23 +197,23 @@ elif view_mode == 'Resume':
                 
             if variables_set_1 == temp_humi_01:
             
-                df_filt1 = df[[item for item in temp_humi_01 if 'TEMP' in item]]
+                df_filt1 = df[[item for item in temp_humi_01 if 'TEMP' in item]] #
                 for col in df_filt1:
-                    sidebar_col2.write(col)
-                df_filt1 = df[[item for item in temp_humi_01 if 'RH' in item]]
+                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
+                df_filt1 = df[[item for item in temp_humi_01 if 'RH' in item]] #
                 for col in df_filt1:
-                    sidebar_col2.write(col)
+                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
                         
             elif variables_set_1 == options_list:
             
                 if variables_set_1 == "SECOND TEMPERATURE SET":
-                    df_filt1 = df[[item for item in df.columns if 'TEMP' in item]]
+                    df_filt1 = df[[item for item in df.columns if 'TEMP' in item]] #
                     for col in df_filt1.columns:
-                        sidebar_col2.write(col)
+                        sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
                 elif variables_set_1 == "SECOND HUMIDITY SET":
-                    df_filt1 = df[[item for item in df.columns if 'RH' in item]]
-                    for col in df_filt1.columns:
-                        sidebar_col2.write(col)
+                    df_filt1 = df[[item for item in df.columns if 'RH' in item]] #
+                    for col in df_filt1.columns:                  
+                        sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,)
                     
     column_34, column_3, column_4 = st.beta_columns([1,2,2])
     
@@ -197,20 +227,17 @@ elif view_mode == 'Resume':
 
     def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
     
-        filtered_df_date = df.loc[date_1_resume:date_2_resume]#Se filtra el Dataframe df, pasado como 
-                                                #argumento entre los valores date_1 y date_2
+        filtered_df_date = df.loc[date_1_resume:date_2_resume]#Se filtra el Dataframe df, pasado como argumento entre los valores date_1 y date_2
 
         return filtered_df_date#Se devuelve el Dataframe filtrado
     
-    filtered_df_date = df_filter_date('Select dates range to filter dataframe',df)
-    
+    filtered_df_date = df_filter_date('Select dates range to filter dataframe',df) ##2 TIPOS DATOS
+                                                                                   ##CAMBIAR
     df_filter1=df_filt1.loc[date_1_resume:date_2_resume]
     
     df_filter0=df_filt0.loc[date_1_resume:date_2_resume]
     
     Data_chart0_title = column_6.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>SET 1 RESUME</p>", unsafe_allow_html=True,)
-
-    #Data_chart = column_6.line_chart(filtered_df_date[temp_humi_00])
     
     Data_chart0 = column_6.empty()
     
@@ -222,7 +249,7 @@ elif view_mode == 'Resume':
         
         Data_chart02 = Data_chart0.line_chart(df_filter0)
  
-    Data_chart1_title = column_7.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>SET 2 ON RESUME GRAPH</p>", unsafe_allow_html=True,)
+    Data_chart1_title = column_7.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>SET 2 RESUME</p>", unsafe_allow_html=True,)
     
     Data_chart1 = column_7.empty()
     
@@ -250,8 +277,7 @@ elif view_mode == 'Data Table':
 
     def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
     
-        filtered_df_date = df.loc[date_1_table:date_2_table]#Se filtra el Dataframe df, pasado como 
-                                                            #argumento entre los valores date_1 y date_2
+        filtered_df_date = df.loc[date_1_table:date_2_table]#Se filtra el Dataframe df, pasado como argumento entre los valores date_1 y date_2
 
         return filtered_df_date#Se devuelve el Dataframe filtrado
     
