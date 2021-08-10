@@ -29,10 +29,10 @@ st.set_page_config(layout="wide")
 df0 = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')
 #df = pd.concat([df1,df0])
 # df.columns += '_meteo1'
-df1 =  lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/")
-#df = pd.concat([df0,df1], axis=1, join='outer')
+df1 =  lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='1T'),path_estacion="dataLogger/")
+df = pd.concat([df0,df1], axis=1, join='outer')
 #df = df0.append(df1, sort=False)
-df = df0.merge(df1, right_index=True, left_index=True, how='outer')
+#df = df0.merge(df1, right_index=True, left_index=True, how='outer')
 #df = df0.join(df1,how='outer')
 #df_meteo2 += '_meteo2'
 
