@@ -26,103 +26,88 @@ import base64
 st.set_page_config(layout="wide")
 
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
-df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger') #Dataframe de Datalogger
-#df = pd.concat([df1,df0])
-# df.columns += '_meteo1'
-df_meteo =  lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='1T'),path_estacion="dataLogger/") #Dataframe de Meteo
-df = pd.concat([df_datalogger,df_meteo], axis=1, join='outer') #Unión de Dataframes
-#df = df0.append(df1, sort=False)
-#df = df0.merge(df1, right_index=True, left_index=True, how='outer')
-#df = df0.join(df1,how='outer')
-#df_meteo2 += '_meteo2'
+df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger') #DATAFRAME DE DE FICHERO DATALOGGER
+df_meteo =  lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/") #DATAFRAME DE FICHERO METEO
 
-#df = df0.append(df1,ignore_index=True)
-#df = pd.concat([df1,df0], axis=1)
+df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/")
+df_meteo.index = df_datalogger.index
 
-view_mode_col, col2, select_variables_col = st.beta_columns([2,6,6]) #Estructura superior de las vistas de la app en columnas
+df = pd.concat([df_datalogger,df_meteo], axis=1) #CONCATENACIÓN DE DATAFRAMES
+
+# img1_col, view_mode_col, col1, col2, img2_col = st.beta_columns([1,5,16,16,1]) #Estructura superior de las vistas de la app en columnas
+col_logo1, view_mode_col, col1, col2, col_logo2 = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURA DE LA APP POR COLUMNAS PARA ELECCIÓN DE MODALIDAD DE VISTA Y VARIABLES A SELECCIONAR
 
 i=0
 
-view_mode = view_mode_col.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table')) #Opciones de vista de app
+view_mode = view_mode_col.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table')) #MODALIDAD DE APP A SELECCIONAR
 
-main_bg = "logo_IES.jpg"
-main_bg_ext = "jpg"
-
-st.markdown( #imagen de fondo de app
+st.markdown( #IMAGEN DE FONDO DE LA APP
     f"""
     <style>
     .reportview-container {{
-        background-image: url(data:image/{main_bg_ext};base64,{base64.b64encode(open(main_bg, "rb").read()).decode()});
         background-size: 100% 100%;
-        background-color: rgba(255,255,255,0.90);
+        background-color: rgba(21,159,228,0.90);
         background-blend-mode: lighten;
-    }}
-    .stButton>button{{
-    color: #11A27B;
-    box-sizing: 5%;
-    height: 5em;
-    width: 5em;
-    font-size:50px;
-    border: 7px solid;
-    border-radius: 10px;
-    padding: 30px;
     }}
     </style>
     """,
     unsafe_allow_html=True
 )
 
-if view_mode == 'Live': #modalidad LIVE
+with col_logo2: #IMAGEN DE LA UPM EN LA INTERFAZ
+    st.image("upm-light_2.png", use_column_width=True)
+    
+with col_logo1: #IMAGEN DEL IES-UPM EN LA INTERFAZ
+    st.image("IES_2.png", use_column_width=True)
+
+if view_mode == 'Live': #MODALIDAD LIVE
        
-    variables_seleccion = select_variables_col.multiselect("", df.columns.tolist()) #seleccion de variables a representar
+    variables_seleccion = col2.multiselect("", df.columns.tolist()) #SELECCIÓN DE MAGNITUDES A REPRESENTAR
     
-    sidebar_live = st.sidebar #ventana despegable a la izquierda
+    sidebar_live = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE A LA IZQUIERDA
     
-    sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>VARIABLES SET", unsafe_allow_html=True,) #titulo de la informacion de la ventana despegable
+    sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>LIVE DATASET", unsafe_allow_html=True,) #TITULO DE INFORMACIÓN EN LA VENTANA DESPLEGABLE
     
     for col in variables_seleccion:
-        sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #informacion en la ventana despegable
+        sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #INFORMACIÓN EN LA VENTANA DESPLEGABLE
 
-    col2.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT SET OF VARIABLES TO PLOT LIVE</p>""", unsafe_allow_html=True,) #'SELECCIONAR VARIABLES A REPRESENTAR EN MODO LIVE'
-
-    # with column_2:
-    #     st.image("logo_upm.png",width=300) #logo UPM
+    col1.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PLOT</p>""", unsafe_allow_html=True,) #'SELECCIONAR VARIABLES A REPRESENTAR EN MODO LIVE'
 
     data_collection = deque() #coleccion creada para su relleno con valores de los datos del dataframe
     time_collection = deque() #coleccion creada para su relleno con informacion de fecha y hora del dataframe
     
     i=0
 
-    status_text=st.empty() #creacion de variable con valor actualizable permanentemente
+    status_text=st.empty() #CREACION DE VARIABLE CON VALOR ACTUALIZABLE PERMANENTEMENTE
     
-    while True: #bucle para actualizacion continua del gráfico
+    while True: #COMIENZO DEL BUCLE PARA ACTUALIZACIÓN CONTINUA DEL GRÁFICO
         
         j=0
         
         if(i<(len(df)-1)):
             i=i+1
             
-        data_collection.append(df[variables_seleccion].values[i]) #relleno de las colecciones con valores de datos del dataframe
-        time_collection.append(df.index[i]) #relleno de las colecciones con informacion de fecha y hora del dataframe
+        data_collection.append(df[variables_seleccion].values[i]) #RELLENO DE LAS COLECCIONES CON VALORES DE DATOS DEL DATAFRAME
+        time_collection.append(df.index[i]) #RELLENO DE LAS COLECCIONES CON INFORMACIÓN DE FECHA Y HORA DEL DATAFRAME
         
-        chart_dataframe = pd.DataFrame( #creacion de nuevo dataframe para la representacion gráfica en tiempo real
-             data_collection, #valores del dataframe
-             index = time_collection, #filas del dataframe
-             columns = variables_seleccion #columnas del dataframe
+        chart_dataframe = pd.DataFrame( #CREACIÓN DE NUEVO DATAFRAME PARA LA REPRESENTACIÓN GRÁFICA EN TIEMPO REAL
+             data_collection, #VALORES DE LOS DATOS DEL DATAFRAME
+             index = time_collection, #FILAS O ÍNDICE DEL DATAFRAME
+             columns = variables_seleccion #COLUMNAS DEL DATAFRAME
              )
         
-        table_dataframe = pd.DataFrame( #creacion de nuevo dataframe para la representacion en tabla en tiempo real
-            [df[variables_seleccion].values[i]], #valores del dataframe
-            index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')], #filas del dataframe
+        table_dataframe = pd.DataFrame( #CREACIÓN DE NUEVO DATAFRAME PARA LA REPRESENTACIÓN EN TABLA EN TIEMPO REAL
+            [df[variables_seleccion].values[i]], #VALORES DE LOS DATOS DEL NUEVO DATAFRAME
+            index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')], #FILAS O ÍNDICE DEL NUEVO DATAFRAME
             columns = variables_seleccion #columnas del dataframe
             )
         
         if(variables_seleccion is None or len(variables_seleccion)==0): 
-            time.sleep(1) #tiempo necesario para que la aplicación arranque sin dar error de 'empty chart'
-            chart = st.line_chart({}) #gráfico vacío si no se ha seleccionado información a representar
+            time.sleep(1) #TIEMPO NECESARIO PARA QUE LA APLICACIÓN ARRANQUE SIN DAR ERROR DE 'EMPTY CHART'
+            chart = st.line_chart({}) #GRÁFICO VACÍO SI NO SE HA SELECCIONADO INFORMACIÓN A REPRESENTAR
         else:
-            chart = st.line_chart(chart_dataframe) #variables dataframe 'chart_dataframe' seleccionadas y representadas en gráfico
-            status_text.table(table_dataframe.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2)) #variables dataframe 'table_dataframe' seleccionadas y representadas en tabla
+            chart = st.line_chart(chart_dataframe) #VARIABLES DEL DATAFRAME 'chart_dataframe', SELECCIONADAS Y REPRESENTADAS EN GRÁFICO
+            status_text.table(table_dataframe.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2)) #VARIABLES DATAFRAME 'table_dataframe' SELECCIONADAS Y REPRESENTADAS EN TABLA
             
             for j in range(1):
                 time.sleep(1) #tiempo de actualizacion del gráfico (simulacion de tiempo real)
@@ -131,161 +116,121 @@ if view_mode == 'Live': #modalidad LIVE
             chart.empty() #vacío de gráfico despues al actualizar
             chart.empty() #vacío de gráfico despues al actualizar        
 
-elif view_mode == 'Resume':
+elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
-    column1_resume, variables_set_selection_col, column3_resume = st.beta_columns([2,6,6]) #estructuración de otra fila de columnas en la vista RESUME
+    first_variables_set_selected_resume = col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 1
     
-    sidebar_col1, sidebar_col2 = st.sidebar.beta_columns([1,1]) #estructuración en columnas de ventana despegable a la izquierda
+    second_variables_set_selected_resume = col2.multiselect("SELECT SECOND SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 2
     
-    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>VARIABLES SET 1", unsafe_allow_html=True,) #titulo 1 de informacion a publicar en ventana despegable
+    #VENTANA INFORMATIVA DESPLEGABLE A LA IZQUIERDA
+    
+    sidebar_resume = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE
 
-    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>VARIABLES SET 2", unsafe_allow_html=True,) #titulo 2 de informacion a publicar en ventana despegable
+    sidebar_col1, sidebar_col2 = sidebar_resume.beta_columns([1,1]) #ESTRUCTURACIÓN, POR COLUMNAS, DE VENTANA DESPLEGABLE
+    
+    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,) #TÍTULO 1 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
 
-    first_variables_set_selected_resume = col2.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #seleccion de primero set de variables a representar graficamente
+    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,) #TÍTULO 2 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
 
-    with variables_set_selection_col: #funcionalidades en la columna 'column2_resume'
-        
-        with variables_set_selection_col.beta_expander("Pick a plot option:"): #creacion de filtro desplegable para elegir diferentes sets de variables a representar graficamente
-            
-            options_list_0 = st.selectbox('', ['FIRST SET ALREADY SELECTED','FIRST TEMPERATURE SET','FIRST HUMIDITY SET']) #opciones de sets alternativos de variables a representar
-            
-            variables_set_0 = list #creacion de lista vacia para relleno con variables
-            
-            if  options_list_0 == "FIRST SET ALREADY SELECTED":
-                variables_set_0=first_variables_set_selected_resume
-            elif options_list_0 == "FIRST TEMPERATURE SET":
-                variables_set_0=options_list_0
-            elif options_list_0 == "FIRST HUMIDITY SET":
-                variables_set_0=options_list_0
-                
-            if variables_set_0 == first_variables_set_selected_resume:
-            
-                df_filt0 = df[[item for item in first_variables_set_selected_resume if 'TEMP' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de variables seleccionadas en el filtro principal
-                for col in df_filt0:
-                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                df_filt0 = df[[item for item in first_variables_set_selected_resume if 'RH' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla
-                for col in df_filt0:
-                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                        
-            elif variables_set_0 == options_list_0:
-            
-                if variables_set_0 == "FIRST TEMPERATURE SET":
-                    df_filt0 = df[[item for item in df.columns if 'TEMP' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de set alternativo 'TEMPERATURAS' de variables
-                    for col in df_filt0.columns:
-                        sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                elif variables_set_0 == "FIRST HUMIDITY SET":
-                    df_filt0 = df[[item for item in df.columns if 'RH' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de set alternativo 'HUMEDADES' de variables
-                    for col in df_filt0.columns:
-                        sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-    
-    second_variables_set_selected = select_variables_col.multiselect("SELECT SECOND SET OF VARIABLES", df.columns.tolist()) #seleccion de primero set de variables a representar graficamente
-    
-    with column3_resume:
-            
-        with st.beta_expander("Pick a plot option:"): #creacion de filtro desplegable para elegir diferentes sets de variables a representar graficamente
-            
-            options_list = st.selectbox('', ['SECOND SET ALREADY SELECTED','SECOND TEMPERATURE SET','SECOND HUMIDITY SET']) #opciones de sets alternativos de variables a representar
-            
-            variables_set_1 = list #creacion de lista vacia para relleno con variables
-            
-            if  options_list == "SECOND SET ALREADY SELECTED":
-                variables_set_1=second_variables_set_selected
-            elif options_list == "SECOND TEMPERATURE SET":
-                variables_set_1=options_list
-            elif options_list == "SECOND HUMIDITY SET":
-                variables_set_1=options_list
-                
-            if variables_set_1 == second_variables_set_selected:
-            
-                df_filt1 = df[[item for item in second_variables_set_selected if 'TEMP' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de set alternativo 'TEMPERATURAS' de variables
-                for col in df_filt1:
-                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                df_filt1 = df[[item for item in second_variables_set_selected if 'RH' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de set alternativo 'HUMEDADES' de variables
-                for col in df_filt1:
-                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                        
-            elif variables_set_1 == options_list:
-            
-                if variables_set_1 == "SECOND TEMPERATURE SET":
-                    df_filt1 = df[[item for item in df.columns if 'TEMP' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de set alternativo 'TEMPERATURAS' de variables
-                    for col in df_filt1.columns:
-                        sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                elif variables_set_1 == "SECOND HUMIDITY SET":
-                    df_filt1 = df[[item for item in df.columns if 'RH' in item]] #creacion de dataframe personalizado para representaciones grafica y modo tabla de set alternativo 'HUMEDADES' de variables
-                    for col in df_filt1.columns:                  
-                        sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #publicacion en la ventana desplegable de variables representadas
-                    
-    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #columnas para filtros de fechas
-    
-    titulo_filtro_fechas.markdown("<p style='display: block; height: 0px; line-height:115px; text-align: justify; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</p>", unsafe_allow_html=True,) #titulo de opciones de fechas a filtrar en representacion gráfica
-    
-    columna_vacia, grafico1_resume, grafico2_resume = st.beta_columns((2,6,6)) #estructura en columnas para representacion grafica de datos
-    
-    fecha_inicio_resume = fecha_inicial.date_input('Start date:', df.index.min(), df.index.min(), df.index.max()) #seleccionar fecha inicial
-    
-    fecha_fin_resume = fecha_final.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today()) #seleccionar fecha final
+    #FILTRO DE SETS ALTERNATIVOS DE DATOS A REPRESENTAR GRAFICAMENTE
 
-    def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
-    
-        filtered_df_date = df.loc[fecha_inicio_resume:fecha_fin_resume]#Se filtra el Dataframe df, pasado como argumento entre los valores date_1 y date_2
+    col1_vacia, empty_column_1, first_set_selection_col, second_set_selection_col, col2_vacia = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURACIÓN DEL FILTRO DE SELECCIÓN DE SETS DE DATOS
 
-        return filtered_df_date#Se devuelve el Dataframe filtrado
-    
-    filtered_df_date = df_filter_date('Select dates range to filter dataframe',df) #elige dataframe inicial a filtrar sobre el rango de fechas seleccionado
-    
-    df_filter_chart2=df_filt1.loc[fecha_inicio_resume:fecha_fin_resume] #filtra, por fechas, el dataframe seleccionado a representar en el primer grafico
-    
-    df_filter_chart1=df_filt0.loc[fecha_inicio_resume:fecha_fin_resume] #filtra, por fechas, el dataframe seleccionado a representar en el primer grafico
-    
-    chart1_title = grafico1_resume.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>SET 1 RESUME</p>", unsafe_allow_html=True,) #titulo de primer grafico
-    
-    Data_chart1 = grafico1_resume.empty() #creacion de primer grafico, inicialmente vacio
-    
-    if variables_set_0==first_variables_set_selected_resume:
+    with first_set_selection_col: #FILTRO PARA GRÁFICO 1
         
-        Data_chart01 = Data_chart1.line_chart(filtered_df_date[first_variables_set_selected_resume]) #representacion grafica (grafico 1) de dataframe 1 filtrado por fechas
-        
-    elif variables_set_0==options_list_0:
-        
-        Data_chart02 = Data_chart1.line_chart(df_filter_chart1) #representacion grafica (grafico 1) de dataframe 2 filtrado por fechas
- 
-    Data_chart1_title = grafico2_resume.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>SET 2 RESUME</p>", unsafe_allow_html=True,)
-    
-    Data_chart2 = grafico2_resume.empty()
-    
-    if variables_set_1==second_variables_set_selected:
-        
-        Data_chart11 = Data_chart2.line_chart(filtered_df_date[second_variables_set_selected]) #representacion grafica (grafico 2) de dataframe 1 filtrado por fechas
-        
-    elif variables_set_1==options_list:
-        
-        Data_chart12 = Data_chart2.line_chart(df_filter_chart2) #representacion grafica (grafico 2) de dataframe 2 filtrado por fechas
+        with st.beta_expander("Pick a dataset to plot:"): #CREACIÓN DE FILTRO O PESTAÑA DESPLEGABLE PARA GRÁFICO 1
             
+            set_option_1 = st.selectbox('', ['FIRST DATASET ALREADY SELECTED','FIRST TEMPERATURE DATASET','FIRST HUMIDITY DATASET']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 1
+
+            if set_option_1 == "FIRST DATASET ALREADY SELECTED":
+                df_set_filter_1 = df[first_variables_set_selected_resume]
+                for col in df_set_filter_1:
+                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET DE DATOS SELECCIONADO
+
+            elif set_option_1 == "FIRST TEMPERATURE DATASET":
+                df_set_filter_1 = df[[item for item in df.columns if 'TEMP' in item]] #DATAFRAME INICIAL, FILTRADO POR TEMPERATURAS SEGÚN SET PREDETERMINADO DE TEMPERATURAS
+                for col in df_set_filter_1.columns:
+                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET DE TEMPERATURAS PREDETERMINADO
+            
+            elif set_option_1 == "FIRST HUMIDITY DATASET":
+                df_set_filter_1 = df[[item for item in df.columns if 'RH' in item]] #DATAFRAME INICIAL, FILTRADO POR TEMPERATURAS SEGÚN SET PREDETERMINADO DE HUMEDADES
+                for col in df_set_filter_1.columns:
+                    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET DE HUMEDADES PREDETERMINADO
+  
+    with second_set_selection_col:
+            
+        with st.beta_expander("Pick a dataset to plot:"): #CREACIÓN DE FILTRO O PESTAÑA DESPLEGABLE PARA GRÁFICO 2
+            
+            set_option_2 = st.selectbox('', ['SECOND DATASET ALREADY SELECTED','SECOND TEMPERATURE DATASET','SECOND HUMIDITY DATASET']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 2
+            
+            if set_option_2 == "SECOND DATASET ALREADY SELECTED":
+                df_set_filter_2 = df[second_variables_set_selected_resume] #DATAFRAME INICIAL, FILTRADO POR TEMPERATURAS SEGÚN SET DE VARIABLES SELECCIONADO MANUALMENTE POR USUARIOS
+                for col in df_set_filter_2:
+                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET DE DATOS SELECCIONADO
+
+            elif set_option_2 == "SECOND TEMPERATURE DATASET":
+                df_set_filter_2 = df[[item for item in df.columns if 'TEMP' in item]] #DATAFRAME INICIAL, FILTRADO POR TEMPERATURAS SEGÚN SET PREDETERMINADO DE TEMPERATURAS
+                for col in df_set_filter_2.columns:
+                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET DE TEMPERATURAS PREDETERMINADO
+            
+            elif set_option_2 == "SECOND HUMIDITY DATASET":
+                df_set_filter_2 = df[[item for item in df.columns if 'RH' in item]] #DATAFRAME INICIAL, FILTRADO POR TEMPERATURAS SEGÚN SET PREDETERMINADO DE HUMEDADES
+                for col in df_set_filter_2.columns:
+                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET DE HUMEDADES PREDETERMINADO
+    
+    #FILTRO DE RANGO DE FECHAS                
+    
+    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA DE FILTRO POR FECHAS
+    
+    titulo_filtro_fechas.markdown("<p style='display: block; height: 0px; line-height:115px; text-align: justify; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</p>", unsafe_allow_html=True,) #TITULO DE FILTRO POR FECHAS
+        
+    fecha_inicio_resume = fecha_inicial.date_input('Start date:', df.index.min(), df.index.min(), df.index.max()) #SELECCIÓN DE FECHA INICIAL
+    
+    fecha_fin_resume = fecha_final.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today()) #SELECCIÓN DE FECHA FINAL
+
+    #REPRESENTACIÓN GRÁFICA DEL DATAFRAME CON LOS SETS DE DATOS ELEGIDOS
+    
+    col1, col_vacia, grafico1_resume, grafico2_resume, col1 = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURA DE REPRESENTACIÓN GRÁFICA
+    
+    df_filter_chart1=df_set_filter_1.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME FILTRADO POR FECHAS (GRÁFICO 1) - LLAMADA A LA FUNCIÓN
+    
+    df_filter_chart2=df_set_filter_2.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME FILTRADO POR FECHAS (GRÁFICO 2) - LLAMADA A LA FUNCIÓN
+    
+    #chart1_title = grafico1_resume.markdown("<p style='display: block; text-align: center; font-size: 15px; font-family: calibri; font-weight: bold'>DATASET 1 RESUME</p>", unsafe_allow_html=True,) #TÍTULO DE GRÁFICO 1
+    
+    Data_chart1 = grafico1_resume.empty() #CREACIÓN DE GRÁFICO 1, INICIALMENTE VACÍO
+    
+    Data_chart01 = Data_chart1.line_chart(df_filter_chart1) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 1
+
+    #chart2_title = grafico2_resume.markdown("<p style='display: block; text-align: center; font-size: 15px; font-family: calibri; font-weight: bold'>DATASET 2 RESUME</p>", unsafe_allow_html=True,)
+    
+    Data_chart2 = grafico2_resume.empty() #CREACIÓN DE GRÁFICO 2, INICIALMENTE VACÍO
+    
+    Data_chart02 = Data_chart2.line_chart(df_filter_chart2) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 2
+     
 elif view_mode == 'Data Table':
     
-    variables_set_selected_live = select_variables_col.multiselect(" ", df.columns.tolist()) #seleccion de primero set de variables a representar en modo tabla
+    #FILTRO DE SELECCIÓN DE VARIABLES
     
-    col2.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT SET OF VARIABLES TO SHOW ON TABLE</a>""", unsafe_allow_html=True,) #"ELEGIR VARIABLES A REPRESENTAR EN TABLA"
+    col1.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PUBLISH ON TABLE</a>""", unsafe_allow_html=True,) #TÍTULO DEL FILTRO DE SELECCIÓN DE VARIABLES A REPRESENTAR
+    
+    variables_set_selected_live = col2.multiselect(" ", df.columns.tolist()) #SELECCIÓN DEL SET DE VARIABLES A REPRESENTAR EN MODO TABLA
 
-    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #columnas para filtros de fechas
-    
-    titulo_filtro_fechas.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</a>""", unsafe_allow_html=True,) #titulo de opciones de fechas a filtrar en representacion gráfica
-    
-    fecha_inicio_table = fecha_inicial.date_input('Start date:', df.index.min(), df.index.min(), df.index.max()) #seleccionar fecha inicial
-    
-    fecha_fin_table = fecha_final.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today()) #seleccionar fecha final
+    #FILTRO DE RANGO DE FECHAS
 
-    def df_filter_date(message, df):#Función para filtrar el Dataframe por fechas
+    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA DEL FILTRO DE RANGO DE FECHAS
     
-        filtered_df_date = df.loc[fecha_inicio_table:fecha_fin_table]#Se filtra el Dataframe df, pasado como argumento entre los valores date_1 y date_2
+    titulo_filtro_fechas.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</a>""", unsafe_allow_html=True,) #TíTULO DE FILTRO DE RANGO DE FECHAS
+    
+    fecha_inicio_table = fecha_inicial.date_input('Start date:', df.index.min(), df.index.min(), df.index.max()) #SELECCIÓN DE FECHA INICIAL
+    
+    fecha_fin_table = fecha_final.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today()) #SELECCIÓN DE FECHA FINAL
 
-        return filtered_df_date#Se devuelve el Dataframe filtrado
+    #REPRESENTACIÓN EN MODO TABLA DEL DATAFRAME CON EL SET DE DATOS ELEGIDO
     
-    filtered_df_date = df_filter_date('Select dates range to filter dataframe',df) #elige dataframe inicial a filtrar sobre el rango de fechas seleccionado
+    df_filtered_table=df.loc[fecha_inicio_table:fecha_fin_table] #DATAFRAME FILTRADO POR FECHAS (GRÁFICO 1) - LLAMADA A LA FUNCIÓN
     
-    filtered_df_date.index=filtered_df_date.index.strftime("%d/%m/%y\n%H:%M:%S") #personalizar fecha y hora en filas de la tabla
-    
-    df_filtered_table=df.loc[fecha_inicio_table:fecha_fin_table] #filtra, por fechas, el dataframe seleccionado a representar en la tabla
+    df_filtered_table.index=df_filtered_table.index.strftime("%d/%m/%y\n%H:%M:%S")
     
     if len(variables_set_selected_live)>0:
-        data_table = st.table(filtered_df_date[variables_set_selected_live].style.set_precision(2)) #creacion de tabla con valores de variables seleccionadas y con precision de 2 decimales
+        data_table = st.table(df_filtered_table[variables_set_selected_live].style.set_precision(2)) #CREACIÓN DE TABLA CON VALORES DE MAGNITUDES SELECCIONADAS Y CON PRECISIÓN DE 2 DECIMALES
