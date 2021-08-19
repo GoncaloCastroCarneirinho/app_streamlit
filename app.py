@@ -52,14 +52,16 @@ with col_logo1: #IMAGEN DEL IES-UPM EN LA INTERFAZ
     st.image("IES_2.png", use_column_width=True)
 
 if view_mode == 'Live': #MODALIDAD LIVE
+
+    with col2:
        
-    variables_seleccion = col2.multiselect("", df.columns.tolist()) #SELECCIÓN DE MAGNITUDES A REPRESENTAR
+        magnitudes_seleccion = st.multiselect("", df.columns.tolist()) #SELECCIÓN DE MAGNITUDES A REPRESENTAR
     
     sidebar_live = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE A LA IZQUIERDA
     
     sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>LIVE DATASET", unsafe_allow_html=True,) #TITULO DE INFORMACIÓN EN LA VENTANA DESPLEGABLE
     
-    for col in variables_seleccion:
+    for col in magnitudes_seleccion:
         sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #INFORMACIÓN EN LA VENTANA DESPLEGABLE
 
     col1.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PLOT</p>""", unsafe_allow_html=True,) #TÍTULO PARA SELECCIÓN DE MAGNITUDES METEOROLÓGICAS
@@ -78,22 +80,22 @@ if view_mode == 'Live': #MODALIDAD LIVE
         if(i<(len(df)-1)):
             i=i+1
             
-        data_collection.append(df[variables_seleccion].values[i]) #RELLENO DE LAS COLECCIONES CON VALORES DE DATOS DEL DATAFRAME
+        data_collection.append(df[magnitudes_seleccion].values[i]) #RELLENO DE LAS COLECCIONES CON VALORES DE DATOS DEL DATAFRAME
         time_collection.append(df.index[i]) #RELLENO DE LAS COLECCIONES CON INFORMACIÓN DE FECHA Y HORA DEL DATAFRAME
         
         chart_dataframe = pd.DataFrame( #CREACIÓN DE NUEVO DATAFRAME PARA LA REPRESENTACIÓN GRÁFICA EN TIEMPO REAL
              data_collection, #VALORES DE LOS DATOS DEL DATAFRAME
              index = time_collection, #FILAS O ÍNDICE DEL DATAFRAME
-             columns = variables_seleccion #COLUMNAS DEL DATAFRAME
+             columns = magnitudes_seleccion #COLUMNAS DEL DATAFRAME
              )
         
         table_dataframe = pd.DataFrame( #CREACIÓN DE NUEVO DATAFRAME PARA LA REPRESENTACIÓN EN TABLA EN TIEMPO REAL
-            [df[variables_seleccion].values[i]], #VALORES DE LOS DATOS DEL NUEVO DATAFRAME
+            [df[magnitudes_seleccion].values[i]], #VALORES DE LOS DATOS DEL NUEVO DATAFRAME
             index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')], #FILAS O ÍNDICE DEL NUEVO DATAFRAME
-            columns = variables_seleccion #columnas del dataframe
+            columns = magnitudes_seleccion #columnas del dataframe
             )
         
-        if(variables_seleccion is None or len(variables_seleccion)==0): 
+        if(magnitudes_seleccion is None or len(magnitudes_seleccion)==0): 
             time.sleep(1) #TIEMPO NECESARIO PARA QUE LA APLICACIÓN ARRANQUE SIN DAR ERROR DE 'EMPTY CHART'
             chart = st.line_chart({}) #GRÁFICO VACÍO SI NO SE HA SELECCIONADO INFORMACIÓN A REPRESENTAR
         else:
@@ -271,7 +273,7 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
 
     #REPRESENTACIÓN GRÁFICA DEL DATAFRAME CON LOS SETS DE DATOS ELEGIDOS
     
-    col1, col_vacia, grafico1_resume, grafico2_resume, col1 = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURA DE REPRESENTACIÓN GRÁFICA
+    col1, col_vacia, grafico1_resume, grafico2_resume, col1 = st.beta_columns([2,2,4.9,4.9,1.2]) #ESTRUCTURA DE REPRESENTACIÓN GRÁFICA
     
     df_filter_chart1=df_set_filter_1.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME FILTRADO POR FECHAS (GRÁFICO 1) - LLAMADA A LA FUNCIÓN
     
