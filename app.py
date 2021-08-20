@@ -24,7 +24,7 @@ from lectura_equipos import lee_meteo
 st.set_page_config(page_title='meteoIES-UPM', page_icon='ies-upm_page_config.jpg', layout="wide")
 
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
-df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger') #DATAFRAME DE DE FICHERO DATALOGGER
+df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger') #DATAFRAME DE FICHERO DATALOGGER
 df_meteo =  lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/") #DATAFRAME DE FICHERO METEO
 
 df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/")
@@ -32,7 +32,7 @@ df_meteo.index = df_datalogger.index
 
 df = pd.concat([df_datalogger,df_meteo], axis=1) #CONCATENACIÓN DE DATAFRAMES
 
-col_logo1, view_mode_col, col1, col2, col_logo2 = st.beta_columns([2,2,4.9,4.9,1.2]) #ESTRUCTURA DE LA APP POR COLUMNAS PARA ELECCIÓN DE MODALIDAD DE VISTA Y VARIABLES A SELECCIONAR
+col_logo1, view_mode_col, selection_col1, selection_col2, col_logo2 = st.beta_columns([2,2,4.9,4.9,1.2]) #ESTRUCTURA DE LA APP POR COLUMNAS PARA ELECCIÓN DE MODALIDAD DE VISTA Y VARIABLES A SELECCIONAR
 
 i=0
 
@@ -53,9 +53,9 @@ with col_logo1: #IMAGEN DEL IES-UPM EN LA INTERFAZ
 
 if view_mode == 'Live': #MODALIDAD LIVE
 
-    with col2:
-       
-        magnitudes_seleccion = st.multiselect("", df.columns.tolist()) #SELECCIÓN DE MAGNITUDES A REPRESENTAR
+    selection_col1.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PLOT</p>""", unsafe_allow_html=True,) #TÍTULO PARA SELECCIÓN DE MAGNITUDES METEOROLÓGICAS
+
+    magnitudes_seleccion = selection_col2.multiselect("", df.columns.tolist()) #SELECCIÓN DE MAGNITUDES A REPRESENTAR
     
     sidebar_live = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE A LA IZQUIERDA
     
@@ -64,14 +64,13 @@ if view_mode == 'Live': #MODALIDAD LIVE
     for col in magnitudes_seleccion:
         sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #INFORMACIÓN EN LA VENTANA DESPLEGABLE
 
-    col1.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PLOT</p>""", unsafe_allow_html=True,) #TÍTULO PARA SELECCIÓN DE MAGNITUDES METEOROLÓGICAS
-
     data_collection = deque() #COLECCIÓN CREADA PARA SU RELLENO CON VALORES DE LOS DATOS (COLUMNAS) DEL DATAFRAME
     time_collection = deque() #COLECCIÓN CREADA PARA SU RELLENO CON INFORMACIÓN TEMPORAL (ÍNDICE) DEL DATAFRAME
     
     i=0
 
-    status_text=st.empty() #CREACION DE VARIABLE CON VALOR ACTUALIZABLE PERMANENTEMENTE
+    table_data=st.empty() #ACTUALIZACIÓN DE REPRESENTACIÓN TABLA EN TIEMPO REAL
+    chart_data=st.empty() #ACTUALIZACIÓN DE REPRESENTACIÓN GRÁFICA EN TIEMPO REAL
     
     while True: #COMIENZO DEL BUCLE PARA ACTUALIZACIÓN CONTINUA DEL GRÁFICO
         
@@ -95,38 +94,26 @@ if view_mode == 'Live': #MODALIDAD LIVE
             columns = magnitudes_seleccion #columnas del dataframe
             )
         
+        #REPRESENTACIÓN, EN TIEMPO REAL, DE MAGNITUDES SELECCIONADAS
         if(magnitudes_seleccion is None or len(magnitudes_seleccion)==0): 
             time.sleep(1) #TIEMPO NECESARIO PARA QUE LA APLICACIÓN ARRANQUE SIN DAR ERROR DE 'EMPTY CHART'
-            chart = st.line_chart({}) #GRÁFICO VACÍO SI NO SE HA SELECCIONADO INFORMACIÓN A REPRESENTAR
+            chart = chart_data.line_chart({}) #GRÁFICO VACÍO SI NO SE HA SELECCIONADO INFORMACIÓN A REPRESENTAR
         else:
-            chart = st.line_chart(chart_dataframe) #VARIABLES DEL DATAFRAME 'chart_dataframe', SELECCIONADAS Y REPRESENTADAS EN GRÁFICO
-            status_text.table(table_dataframe.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2)) #VARIABLES DATAFRAME 'table_dataframe' SELECCIONADAS Y REPRESENTADAS EN TABLA
+            chart = chart_data.line_chart(chart_dataframe) #VARIABLES DEL DATAFRAME 'chart_dataframe', SELECCIONADAS Y REPRESENTADAS EN GRÁFICO
+            table_data.table(table_dataframe.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2)) #VARIABLES DATAFRAME 'table_dataframe' SELECCIONADAS Y REPRESENTADAS EN TABLA
             
             for j in range(1):
-                time.sleep(1) #TIEMPO DE ACTUALIZACIÓN DEL GRÁFICO (SIMULACIÓN DE TIEMPO REAL)
-                
-            chart.empty() #VACÍO DE GRÁFICO AL ACTUALIZAR  
-            chart.empty() #VACÍO DE GRÁFICO AL ACTUALIZAR        
-
+                time.sleep(1) #TIEMPO DE ACTUALIZACIÓN DE GRÁFICO Y TABLA (SIMULACIÓN DE TIEMPO REAL)
+        
 elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
-    first_variables_set_selected_resume = col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 1
+    first_variables_set_selected_resume = selection_col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 1
     
-    second_variables_set_selected_resume = col2.multiselect("SELECT SECOND SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 2
-    
-    #VENTANA INFORMATIVA DESPLEGABLE A LA IZQUIERDA
-    
-    sidebar_resume = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE
-
-    sidebar_col1, sidebar_col2 = sidebar_resume.beta_columns([1,1]) #ESTRUCTURACIÓN, POR COLUMNAS, DE VENTANA DESPLEGABLE
-    
-    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,) #TÍTULO 1 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
-
-    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,) #TÍTULO 2 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+    second_variables_set_selected_resume = selection_col2.multiselect("SELECT SECOND SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 2
 
     #FILTRO DE SETS ALTERNATIVOS DE DATOS A REPRESENTAR GRAFICAMENTE
 
-    col1_vacia, empty_column_1, first_set_selection_col, second_set_selection_col, col2_vacia = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURACIÓN DEL FILTRO DE SELECCIÓN DE SETS DE DATOS
+    empty_column_1, empty_column_2, first_set_selection_col, second_set_selection_col, empty_column_3 = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURACIÓN DEL FILTRO DE SELECCIÓN DE SETS DE DATOS
 
     with first_set_selection_col: #FILTRO PARA GRÁFICO 1
         
@@ -190,9 +177,6 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
             
             elif set_option_1 == "PRECIPITATION - GEONICA":
                 df_set_filter_1 = df[[item for item in df.columns if 'Lluvia' in item]] #DATAFRAME INICIAL, FILTRADO POR PRECIPITACIÓN DE GEÓNICA    
-            
-            for col in df_set_filter_1.columns: #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE MAGNITUDES SELECCIONADAS
-                sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES DE ELEVACIÓN Y ORIENTACIÓN DEL SOL DE GEÓNICA 
   
     with second_set_selection_col:
             
@@ -257,9 +241,22 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
 
             elif set_option_2 == "PRECIPITATION - GEONICA":
                 df_set_filter_2 = df[[item for item in df.columns if 'Lluvia' in item]] #DATAFRAME INICIAL, FILTRADO POR PRECIPITACIÓN DE GEÓNICA
+    
+    #VENTANA INFORMATIVA DESPLEGABLE A LA IZQUIERDA
+    
+    sidebar_resume = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE
 
-            for col in df_set_filter_2.columns: #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE MAGNITUDES SELECCIONADAS
-                    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES DE ELEVACIÓN Y ORIENTACIÓN DEL SOL DE GEÓNICA
+    sidebar_col1, sidebar_col2 = sidebar_resume.beta_columns([1,1]) #ESTRUCTURACIÓN, POR COLUMNAS, DE VENTANA DESPLEGABLE
+    
+    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,) #TÍTULO 1 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+
+    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,) #TÍTULO 2 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+    
+    for col in df_set_filter_1.columns: #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE MAGNITUDES SELECCIONADAS
+        sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    
+    for col in df_set_filter_2.columns: #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE MAGNITUDES SELECCIONADAS
+                sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
     
     #FILTRO DE RANGO DE FECHAS                
     
@@ -281,15 +278,15 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
     chart1_title = grafico1_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_1, unsafe_allow_html=True,) #TÍTULO DE GRÁFICO 1
     
-    Data_chart1 = grafico1_resume.empty() #CREACIÓN DE GRÁFICO 1, INICIALMENTE VACÍO
+    chart1 = grafico1_resume.empty() #CREACIÓN DE GRÁFICO 1, INICIALMENTE VACÍO
     
-    Data_chart01 = Data_chart1.line_chart(df_filter_chart1, height=280) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 1
+    Data_chart1 = chart1.line_chart(df_filter_chart1, height=280) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 1
 
     chart2_title = grafico2_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_2, unsafe_allow_html=True,)
     
-    Data_chart2 = grafico2_resume.empty() #CREACIÓN DE GRÁFICO 2, INICIALMENTE VACÍO
+    chart2 = grafico2_resume.empty() #CREACIÓN DE GRÁFICO 2, INICIALMENTE VACÍO
     
-    Data_chart02 = Data_chart2.line_chart(df_filter_chart2,  height=280) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 2
+    Data_chart2 = chart2.line_chart(df_filter_chart2,  height=280) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 2
      
 elif view_mode == 'Data Table':
     
@@ -297,7 +294,7 @@ elif view_mode == 'Data Table':
     
     col1.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PUBLISH ON TABLE</a>""", unsafe_allow_html=True,) #TÍTULO DEL FILTRO DE SELECCIÓN DE VARIABLES A REPRESENTAR
     
-    variables_set_selected_live = col2.multiselect(" ", df.columns.tolist()) #SELECCIÓN DEL SET DE VARIABLES A REPRESENTAR EN MODO TABLA
+    variables_set_selected_live = selection_col2.multiselect(" ", df.columns.tolist()) #SELECCIÓN DEL SET DE VARIABLES A REPRESENTAR EN MODO TABLA
 
     #FILTRO DE RANGO DE FECHAS
 
