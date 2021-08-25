@@ -14,6 +14,7 @@ import datetime
 from pygraphtec import lee_fichero_sesion, lee_ultima_sesion
 from lectura_equipos import lee_meteo
 import glob
+import os
 
 st.set_page_config(page_title='meteoIES-UPM', page_icon='ies-upm_page_config.jpg', layout="wide") #CONFIGURACIÓN DE PÁGINA WEB
 st.markdown(f"""<style>.reportview-container {{ 
@@ -24,13 +25,12 @@ st.markdown(f"""<style>.reportview-container {{
         unsafe_allow_html=True) #IMAGEN DE FONDO DE INTERFAZ
 
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
-print(glob.glob("*/*.csv"))
-# fichero2_datalogger = pd.concat([pd.read_csv(name,sep='\t') for name in glob.glob('*/*.{}'.format('csv'))]).drop_duplicates()
-# fichero2_datalogger.to_csv( "dataLogger/fichero2_datalogger.csv")
-# df_datalogger = lee_fichero_sesion("fichero2_datalogger.csv", path_sesiones='dataLogger') #DATAFRAME DE FICHERO DATALOGGER
-df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger') #DATAFRAME DE FICHERO DATALOGGER
-#df_datalogger = lee_ultima_sesion('138.4.46.99') #DATAFRAME DE FICHERO DATALOGGER
-df_meteo = lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/", update_cache=True) #DATAFRAME DE FICHERO METEO
+print(lee_fichero_sesion(name, path_sesiones='dataLogger') for name in glob.glob("*.csv"))
+
+df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="dataLogger") for name in glob.glob("*.csv"))
+#df_datalogger = pd.concat([lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger'), lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')],axis=0)#DATAFRAME DE FICHERO DATALOGGER
+#df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')#Se ejecuta la función
+df_meteo = lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/") #DATAFRAME DE FICHERO METEO
 
 df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/")
 df_meteo.index = df_datalogger.index
@@ -106,7 +106,7 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
             
             for j in range(1):
                 time.sleep(1) #TIEMPO DE ACTUALIZACIÓN DE GRÁFICO Y TABLA (SIMULACIÓN DE TIEMPO REAL)
-        
+     
 elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
     first_variables_set_selected_resume = selection_col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 1
@@ -122,48 +122,48 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
         with st.beta_expander("Pick a dataset to plot:"):
             
             #FILTRO O PESTAÑA DESPLEGABLE PARA SELECCIÓN
-            set_option_1 = st.selectbox('', ['DATASET ALREADY SELECTED','TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER','RELATIVE HUMIDITY - MOCKUPS 1 & 2 - DATALOGGER','PRESSURE - MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE & RELATIVE HUMIDITY - ELECT. CABIN. - DATALOGGER','TEMPERATURE - FRONTSIDE MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE - BACKSIDE MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE - GEONICA','RELATIVE HUMIDITY - GEONICA','CELULAS TOP, MID & BOT - GEONICA','IRRADIANCE - GEONICA','WIND SPEED & DIRECTION - GEONICA','SUN ELEVATION & ORIENTATION - GEONICA','IRRADIANCE & TEMPERATURE PIRGEO - GEONICA','ATMOSPHERIC PRESSURE - GEONICA','PRECIPITATION - GEONICA']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 1
+            set_option_1 = st.selectbox('', ['SET ALREADY SELECTED','DATALOGGER: TEMP - MOCKUPS 1&2','DATALOGGER: RH - MOCKUPS 1&2','DATALOGGER: PRESSURE - MOCKUPS 1&2','DATALOGGER: TEMP & RH - ELECT. CABIN.','DATALOGGER: TEMP - FRONTSIDE MOCKUPS 1&2','DATALOGGER: TEMP - BACKSIDE MOCKUPS 1&2','GEONICA: ATMOSPH. TEMP','GEONICA: RH','GEONICA: CELULAS TOP, MID & BOT','GEONICA: IRRADIANCE','GEONICA: WIND SPEED & DIRECTION','GEONICA: SUN ELEV. & ORIENT.','GEONICA: IRRADIANCE & TEMP PIRGEO','GEONICA: ATMOSPH. PRESSURE','GEONICA: PRECIPITATION']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 1
 
-            if set_option_1 == "DATASET ALREADY SELECTED": #DATASET CON SELECCIÓN MANUAL DE MAGNITUDES
+            if set_option_1 == "SET ALREADY SELECTED": #DATASET CON SELECCIÓN MANUAL DE MAGNITUDES
                 df_set_filter_1 = df[first_variables_set_selected_resume] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS INTERIOR MOCKUPS-DATALOGGER
+            elif set_option_1 == "DATALOGGER: TEMP - MOCKUPS 1&2": #TEMPERATURAS INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_1 = df[[item for item in df.columns if 'M1-TEMP' in item]+
                                      [item for item in df.columns if 'M2-TEMP' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "RELATIVE HUMIDITY - MOCKUPS 1 & 2 - DATALOGGER": #HUMEDADES INTERIOR MOCKUPS-DATALOGGER
+            elif set_option_1 == "DATALOGGER: RH - MOCKUPS 1&2": #HUMEDADES INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_1 = df[[item for item in df.columns if 'M1-RH' in item]+
                                      [item for item in df.columns if 'M2-RH' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "PRESSURE - MOCKUPS 1 & 2 - DATALOGGER": #PRESIONES INTERIOR MOCKUPS-DATALOGGER
+            elif set_option_1 == "DATALOGGER: PRESSURE - MOCKUPS 1&2": #PRESIONES INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_1 = df[[item for item in df.columns if 'M1-SP' in item]+
                                      [item for item in df.columns if 'M2-SP' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "TEMPERATURE & RELATIVE HUMIDITY - ELECT. CABIN. - DATALOGGER": #TEMPERATURA Y HUMEDAD - ARMARIO ELÉCTRICO-DATALOGGER
+            elif set_option_1 == "DATALOGGER: TEMP & RH - ELECT. CABIN.": #TEMPERATURA Y HUMEDAD - ARMARIO ELÉCTRICO-DATALOGGER
                 df_set_filter_1 = df[[item for item in df.columns if 'C-TEMP' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "TEMPERATURE - FRONTSIDE MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS DELANTERA MOCKUPS-DATALOGGER
+            elif set_option_1 == "DATALOGGER: TEMP - FRONTSIDE MOCKUPS 1&2": #TEMPERATURAS DELANTERA MOCKUPS-DATALOGGER
                 df_set_filter_1 = df[[item for item in df.columns if 'M1-Tp FS' in item]+
                                      [item for item in df.columns if 'M2-Tp FS' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "TEMPERATURE - BACKSIDE MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS TRASERA MOCKUPS-DATALOGGER
+            elif set_option_1 == "DATALOGGER: TEMP - BACKSIDE MOCKUPS 1&2": #TEMPERATURAS TRASERA MOCKUPS-DATALOGGER
                 df_set_filter_1 = df[[item for item in df.columns if 'M1-Tp BS' in item]+
                                      [item for item in df.columns if 'M2-TP BS' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "ATMOSPHERIC TEMPERATURE - GEONICA": #TEMPERATURA ATMOSFÉRICA-GEÓNICA
+            elif set_option_1 == "GEONICA: ATMOSPH. TEMP": #TEMPERATURA ATMOSFÉRICA-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Temp. Ai' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "RELATIVE HUMIDITY - GEONICA": #HUMEDAD RELATIVA-GEÓNICA
+            elif set_option_1 == "GEONICA: RH": #HUMEDAD RELATIVA-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Hum. Rel' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "CELULAS TOP, MID & BOT - GEONICA": #CÉLULAS TOP, MID Y BOT-GEÓNICA
+            elif set_option_1 == "GEONICA: CELULAS TOP, MID & BOT": #CÉLULAS TOP, MID Y BOT-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Celula' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "IRRADIANCE - GEONICA": #IRRADIANCIAS-GEÓNICA
+            elif set_option_1 == "GEONICA: IRRADIANCE": #IRRADIANCIAS-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Bn' in item]+
                                      [item for item in df.columns if 'Gn' in item]+
                                      [item for item in df.columns if 'Gh' in item]+
                                      [item for item in df.columns if 'Dh' in item]+
                                      [item for item in df.columns if 'G(41)' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "WIND SPEED & DIRECTION - GEONICA": #VELOCIDAD Y DIRECCIÓN DEL VIENTO-GEÓNICA
+            elif set_option_1 == "GEONICA: WIND SPEED & DIRECTION": #VELOCIDAD Y DIRECCIÓN DEL VIENTO-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Vien' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "SUN ELEVATION & ORIENTATION - GEONICA": #ELEVACIÓN Y ORIENTACIÓN DEL SOL-GEÓNICA
+            elif set_option_1 == "GEONICA: SUN ELEV. & ORIENT.": #ELEVACIÓN Y ORIENTACIÓN DEL SOL-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Sol' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "IRRADIANCE & TEMPERATURE PIRGEO - GEONICA": #IRRADIANCIA Y TEMPERATURA PIRGEO-GEÓNICA
+            elif set_option_1 == "GEONICA: IRRADIANCE & TEMP PIRGEO": #IRRADIANCIA Y TEMPERATURA PIRGEO-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Pirgeo' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "PRESSURE - GEONICA": #PRESIÓN-GEÓNICA
+            elif set_option_1 == "GEONICA: ATMOSPH. PRESSURE": #PRESIÓN-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Presion' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_1 == "PRECIPITATION - GEONICA": #PRECIPITACIÓN-GEÓNICA
+            elif set_option_1 == "GEONICA: PRECIPITATION": #PRECIPITACIÓN-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Lluvia' in item]] #DATAFRAME INICIAL FILTRADO    
   
     #SELECCIÓN DE DATASETS PARA GRÁFICO 2
@@ -172,9 +172,9 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
         with st.beta_expander("Pick a dataset to plot:"):
             
             #FILTRO O PESTAÑA DESPLEGABLE PARA SELECCIÓN
-            set_option_2 = st.selectbox('', ['DATASET ALREADY SELECTED ','TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER','RELATIVE HUMIDITY - MOCKUPS 1 & 2 - DATALOGGER','PRESSURE - MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE & RELATIVE HUMIDITY - ELECT. CABIN. - DATALOGGER','TEMPERATURE - FRONTSIDE MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE - BACKSIDE MOCKUPS 1 & 2 - DATALOGGER','ATMOSPHERIC TEMPERATURE - GEONICA','RELATIVE HUMIDITY - GEONICA','CELULAS TOP, MID & BOT - GEONICA','IRRADIANCE - GEONICA','WIND SPEED & DIRECTION - GEONICA','SUN ELEVATION & ORIENTATION - GEONICA','IRRADIANCE & TEMPERATURE PIRGEO - GEONICA','ATMOSPHERIC PRESSURE - GEONICA','PRECIPITATION - GEONICA']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 2
+            set_option_2 = st.selectbox('', ['SET ALREADY SELECTED ','TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER','RELATIVE HUMIDITY - MOCKUPS 1 & 2 - DATALOGGER','PRESSURE - MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE & RELATIVE HUMIDITY - ELECT. CABIN. - DATALOGGER','TEMPERATURE - FRONTSIDE MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE - BACKSIDE MOCKUPS 1 & 2 - DATALOGGER','ATMOSPHERIC TEMPERATURE - GEONICA','RELATIVE HUMIDITY - GEONICA','CELULAS TOP, MID & BOT - GEONICA','IRRADIANCE - GEONICA','WIND SPEED & DIRECTION - GEONICA','SUN ELEVATION & ORIENTATION - GEONICA','IRRADIANCE & TEMPERATURE PIRGEO - GEONICA','ATMOSPHERIC PRESSURE - GEONICA','PRECIPITATION - GEONICA']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 2
             
-            if set_option_2 == "DATASET ALREADY SELECTED ": #DATASET CON SELECCIÓN MANUAL DE MAGNITUDES
+            if set_option_2 == "SET ALREADY SELECTED ": #DATASET CON SELECCIÓN MANUAL DE MAGNITUDES
                 df_set_filter_2 = df[second_variables_set_selected_resume] #DATAFRAME INICIAL FILTRADO
             elif set_option_2 == "TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'M1-TEMP' in item]+
@@ -219,13 +219,17 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
     #VENTANA INFORMATIVA DESPLEGABLE A LA IZQUIERDA
     sidebar_resume = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE
-    sidebar_col1, sidebar_col2 = sidebar_resume.beta_columns([1,1]) #ESTRUCTURA POR COLUMNAS
-    sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,) #TÍTULO 1 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
-    sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,) #TÍTULO 2 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
-    for col in df_set_filter_1.columns: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS EN COLUMNA 1
-        sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
-    for col in df_set_filter_2.columns: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS EN COLUMNA 2
-                sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    # sidebar_col1, sidebar_col2 = sidebar_resume.beta_columns([1,1]) #ESTRUCTURA POR COLUMNAS
+    # sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,) #TÍTULO 1 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+    # sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,) #TÍTULO 2 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+    # for col in df_set_filter_1.columns: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS EN COLUMNA 1
+    #     sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    # for col in df_set_filter_2.columns: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS EN COLUMNA 2
+    #     sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,)    
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 17px; font-family: calibri'>"+set_option_1, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,)    
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 17px; font-family: calibri'>"+set_option_2, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
     
     #FILTRO DE RANGO DE FECHAS                
     titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA DE FILTRO POR FECHAS
@@ -235,19 +239,19 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
 
     #REPRESENTACIÓN GRÁFICA DEL DATAFRAME CON LOS SETS DE DATOS ELEGIDOS
     #ESTRUCTURA
-    col1, col_vacia, grafico1_resume, grafico2_resume, col1 = st.beta_columns([2,2,4.9,4.9,1.2])
+    col1, col_vacia, grafico1_resume, grafico2_resume, col2 = st.beta_columns([2,2,4.9,4.9,1.2])
     
     #GRÁFICO 1
     df_filter_chart1=df_set_filter_1.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME FILTRADO POR FECHAS
-    chart1_title = grafico1_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_1, unsafe_allow_html=True,) #TÍTULO DE GRÁFICO 1
-    chart1 = grafico1_resume.empty() #CREACIÓN DE GRÁFICO, INICIALMENTE VACÍO
-    Data_chart1 = chart1.line_chart(df_filter_chart1, height=280) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
+    #chart1_title = grafico1_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_1, unsafe_allow_html=True,) #TÍTULO DE GRÁFICO 1
+    #chart1 = grafico1_resume.empty() #CREACIÓN DE GRÁFICO, INICIALMENTE VACÍO
+    Data_chart1 = grafico1_resume.line_chart(df_filter_chart1, use_container_width=True) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
 
     #GRÁFICO 2
     df_filter_chart2=df_set_filter_2.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME 2 FILTRADO POR FECHAS
-    chart2_title = grafico2_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_2, unsafe_allow_html=True,)
-    chart2 = grafico2_resume.empty() #CREACIÓN DE GRÁFICO, INICIALMENTE VACÍO
-    Data_chart2 = chart2.line_chart(df_filter_chart2,  height=280) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
+    #chart2_title = grafico2_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_2, unsafe_allow_html=True,)
+    #chart2 = grafico2_resume.empty() #CREACIÓN DE GRÁFICO, INICIALMENTE VACÍO
+    Data_chart2 = grafico2_resume.line_chart(df_filter_chart2, use_container_width=True) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
      
 elif view_mode == 'Data Table': #MODALIDAD 'DATA TABLE'
     
