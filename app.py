@@ -27,9 +27,9 @@ st.markdown(f"""<style>.reportview-container {{
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
 print(lee_fichero_sesion(name, path_sesiones='dataLogger') for name in glob.glob("*.csv"))
 
-df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="dataLogger") for name in glob.glob("*.csv"))
+#df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="dataLogger") for name in glob.glob("*.csv"))
 #df_datalogger = pd.concat([lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger'), lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')],axis=0)#DATAFRAME DE FICHERO DATALOGGER
-#df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')#Se ejecuta la función
+df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')#Se ejecuta la función
 df_meteo = lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='10T'),path_estacion="dataLogger/") #DATAFRAME DE FICHERO METEO
 
 df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/")
@@ -172,49 +172,49 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
         with st.beta_expander("Pick a dataset to plot:"):
             
             #FILTRO O PESTAÑA DESPLEGABLE PARA SELECCIÓN
-            set_option_2 = st.selectbox('', ['SET ALREADY SELECTED ','TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER','RELATIVE HUMIDITY - MOCKUPS 1 & 2 - DATALOGGER','PRESSURE - MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE & RELATIVE HUMIDITY - ELECT. CABIN. - DATALOGGER','TEMPERATURE - FRONTSIDE MOCKUPS 1 & 2 - DATALOGGER','TEMPERATURE - BACKSIDE MOCKUPS 1 & 2 - DATALOGGER','ATMOSPHERIC TEMPERATURE - GEONICA','RELATIVE HUMIDITY - GEONICA','CELULAS TOP, MID & BOT - GEONICA','IRRADIANCE - GEONICA','WIND SPEED & DIRECTION - GEONICA','SUN ELEVATION & ORIENTATION - GEONICA','IRRADIANCE & TEMPERATURE PIRGEO - GEONICA','ATMOSPHERIC PRESSURE - GEONICA','PRECIPITATION - GEONICA']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 2
+            set_option_2 = st.selectbox('', ['SET ALREADY SELECTED','DATALOGGER: TEMP - MOCKUPS 1&2','DATALOGGER: RH - MOCKUPS 1&2','DATALOGGER: PRESSURE - MOCKUPS 1&2','DATALOGGER: TEMP & RH - ELECT. CABIN.','DATALOGGER: TEMP - FRONTSIDE MOCKUPS 1&2','DATALOGGER: TEMP - BACKSIDE MOCKUPS 1&2','GEONICA: ATMOSPH. TEMP','GEONICA: RH','GEONICA: CELULAS TOP, MID & BOT','GEONICA: IRRADIANCE','GEONICA: WIND SPEED & DIRECTION','GEONICA: SUN ELEV. & ORIENT.','GEONICA: IRRADIANCE & TEMP PIRGEO','GEONICA: ATMOSPH. PRESSURE','GEONICA: PRECIPITATION']) #OPCIONES DE SETS DE DATOS A REPRESENTAR EN GRÁFICO 2
             
             if set_option_2 == "SET ALREADY SELECTED ": #DATASET CON SELECCIÓN MANUAL DE MAGNITUDES
                 df_set_filter_2 = df[second_variables_set_selected_resume] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "TEMPERATURE - MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS INTERIOR MOCKUPS-DATALOGGER
+            elif set_option_2 == "DATALOGGER: TEMP - MOCKUPS 1&2": #TEMPERATURAS INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'M1-TEMP' in item]+
                                      [item for item in df.columns if 'M2-TEMP' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "RELATIVE HUMIDITY - MOCKUPS 1 & 2 - DATALOGGER": #HUMEDADES INTERIOR MOCKUPS-DATALOGGER
+            elif set_option_2 == "DATALOGGER: RH - MOCKUPS 1&2": #HUMEDADES INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'M1-RH' in item]+
                                      [item for item in df.columns if 'M2-RH' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "PRESSURE - MOCKUPS 1 & 2 - DATALOGGER": #PRESIONES INTERIOR MOCKUPS-DATALOGGER
+            elif set_option_2 == "DATALOGGER: PRESSURE - MOCKUPS 1&2": #PRESIONES INTERIOR MOCKUPS-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'M1-SP' in item]+
                                      [item for item in df.columns if 'M2-SP' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "TEMPERATURE & RELATIVE HUMIDITY - ELECT. CABIN. - DATALOGGER": #TEMPERATURA Y HUMEDAD - ARMARIO ELÉCTRICO-DATALOGGER
+            elif set_option_2 == "DATALOGGER: TEMP & RH - ELECT. CABIN.": #TEMPERATURA Y HUMEDAD - ARMARIO ELÉCTRICO-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'C-TEMP' in item]+
                                      [item for item in df.columns if 'C-RH' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "TEMPERATURE - FRONTSIDE MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS DELANTERA MOCKUPS-DATALOGGER
+            elif set_option_2 == "DATALOGGER: TEMP - FRONTSIDE MOCKUPS 1&2": #TEMPERATURAS DELANTERA MOCKUPS-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'M1-Tp FS' in item]+
                                      [item for item in df.columns if 'M2-Tp FS' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "TEMPERATURE - BACKSIDE MOCKUPS 1 & 2 - DATALOGGER": #TEMPERATURAS TRASERA MOCKUPS-DATALOGGER
+            elif set_option_2 == "DATALOGGER: TEMP - BACKSIDE MOCKUPS 1&2": #TEMPERATURAS TRASERA MOCKUPS-DATALOGGER
                 df_set_filter_2 = df[[item for item in df.columns if 'M1-Tp BS' in item]+
                                      [item for item in df.columns if 'M2-TP BS' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "ATMOSPHERIC TEMPERATURE - GEONICA": #TEMPERATURA ATMOSFÉRICA-GEÓNICA
+            elif set_option_2 == "GEONICA: ATMOSPH. TEMP": #TEMPERATURA ATMOSFÉRICA-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Temp. Ai' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "RELATIVE HUMIDITY DATASET - GEONICA": #HUMEDAD RELATIVA-GEÓNICA
+            elif set_option_2 == "GEONICA: RH": #HUMEDAD RELATIVA-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Hum. Rel' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "CELULAS TOP, MID & BOT - GEONICA": #CÉLULAS TOP, MID Y BOT-GEÓNICA
+            elif set_option_2 == "GEONICA: CELULAS TOP, MID & BOT": #CÉLULAS TOP, MID Y BOT-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Celula' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "IRRADIANCE - GEONICA": #IRRADIANCIAS-GEÓNICA
+            elif set_option_2 == "GEONICA: IRRADIANCE": #IRRADIANCIAS-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Bn' in item]+
                                      [item for item in df.columns if 'Gn' in item]+
                                      [item for item in df.columns if 'Gh' in item]+
                                      [item for item in df.columns if 'Dh' in item]+
                                      [item for item in df.columns if 'G(41)' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "WIND SPEED & DIRECTION - GEONICA": #VELOCIDAD Y DIRECCIÓN DEL VIENTO-GEÓNICA
+            elif set_option_2 == "GEONICA: WIND SPEED & DIRECTION": #VELOCIDAD Y DIRECCIÓN DEL VIENTO-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Vien' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "SUN ELEVATION & ORIENTATION - GEONICA": #ELEVACIÓN Y ORIENTACIÓN DEL SOL-GEÓNICA
+            elif set_option_2 == "GEONICA: SUN ELEV. & ORIENT.": #ELEVACIÓN Y ORIENTACIÓN DEL SOL-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Sol' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "IRRADIANCE & TEMPERATURE PIRGEO - GEONICA": #IRRADIANCIA Y TEMPERATURA PIRGEO-GEÓNICA
+            elif set_option_2 == "GEONICA: IRRADIANCE & TEMP PIRGEO": #IRRADIANCIA Y TEMPERATURA PIRGEO-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Pirgeo' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "ATMOSPHERIC PRESSURE - GEONICA": #PRESIÓN-GEÓNICA
+            elif set_option_2 == "GEONICA: ATMOSPH. PRESSURE": #PRESIÓN-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Presion' in item]] #DATAFRAME INICIAL FILTRADO
-            elif set_option_2 == "PRECIPITATION - GEONICA": #PRECIPITACIÓN-GEÓNICA
+            elif set_option_2 == "GEONICA: PRECIPITATION": #PRECIPITACIÓN-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Lluvia' in item]] #DATAFRAME INICIAL FILTRADO
     
     #VENTANA INFORMATIVA DESPLEGABLE A LA IZQUIERDA
