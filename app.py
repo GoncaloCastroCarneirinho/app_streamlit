@@ -62,6 +62,8 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
     sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>LIVE DATASET", unsafe_allow_html=True,) #TITULO DE INFORMACIÓN EN LA VENTANA DESPLEGABLE
     for col in magnitudes_seleccion: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS
         sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #INFORMACIÓN EN LA VENTANA DESPLEGABLE
+    for j in range(3): #SOLUCIÓN PARA PROBLEMA DE EJECUCIÓN CONSECUTIVA ENTRE MODALIDADES (eliminación de bloques de columnas)
+        sidebar_live.empty()
 
     #COLECCIONES EXTENSIBLE Y ACTUALIZABLE, EN TIEMPO REAL, DE VALORES A REPRESENTAR GRÁFICAMENTE
     data_collection = deque() #COLECCIÓN A RELLENAR CON VALORES DE LOS DATOS (COLUMNAS) DEL DATAFRAME
@@ -70,6 +72,8 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
     #ACTUALIZACIÓN DE PUBLICACIÓN EN TIEMPO REAL
     table_data=st.empty() #PUBLICACIÓN EN TABLA
     chart_data=st.empty() #REPRESENTACIÓN GRÁFICA
+    
+    st.empty() #SOLUCIÓN PARA PROBLEMA DE EJECUCIÓN CONSECUTIVA ENTRE MODALIDADES (eliminación de bloques de columnas)
     
     while True: #BUCLE PARA ACTUALIZACIÓN CONTINUA DE PUBLICACIÓN DE DATOS DE MAGNITUDES SELECCIONADAS
         
@@ -106,7 +110,7 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
             
             for j in range(1):
                 time.sleep(1) #TIEMPO DE ACTUALIZACIÓN DE GRÁFICO Y TABLA (SIMULACIÓN DE TIEMPO REAL)
-     
+                
 elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
     first_variables_set_selected_resume = selection_col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 1
@@ -256,7 +260,7 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
 elif view_mode == 'Data Table': #MODALIDAD 'DATA TABLE'
     
     #FILTRO DE SELECCIÓN DE VARIABLES
-    col1.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PUBLISH ON TABLE</a>""", unsafe_allow_html=True,) #TÍTULO DEL FILTRO DE SELECCIÓN DE VARIABLES A REPRESENTAR
+    selection_col1.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PUBLISH ON TABLE</a>""", unsafe_allow_html=True,) #TÍTULO DEL FILTRO DE SELECCIÓN DE VARIABLES A REPRESENTAR
     variables_set_selected_live = selection_col2.multiselect(" ", df.columns.tolist()) #SELECCIÓN DEL SET DE VARIABLES A REPRESENTAR EN MODO TABLA
 
     #FILTRO DE RANGO DE FECHAS
