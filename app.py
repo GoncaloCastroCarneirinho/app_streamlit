@@ -11,10 +11,9 @@ from collections import deque
 from datetime import timedelta
 import time
 import datetime
-from pygraphtec import lee_fichero_sesion, lee_ultima_sesion
+from pygraphtec import lee_fichero_sesion
 from lectura_equipos import lee_meteo
 import glob
-import os
 
 st.set_page_config(page_title='meteoIES-UPM', page_icon='ies-upm_page_config.jpg', layout="wide") #CONFIGURACIÓN DE PÁGINA WEB
 st.markdown(f"""<style>.reportview-container {{ 
@@ -22,7 +21,21 @@ st.markdown(f"""<style>.reportview-container {{
         background-color: rgba(21,159,228,0.90);
         background-blend-mode: lighten;
         }}</style>""",
-        unsafe_allow_html=True) #IMAGEN DE FONDO DE INTERFAZ
+        unsafe_allow_html=True) #FONDO DE LA APLICACIÓN
+    
+st.markdown("""<style>footer {
+        display:block; 
+        text-align:center;
+        }
+                      footer:after {
+        content:'© 2021 All rights reserved. Universidad Politécnica de Madrid'; 
+        visibility:visible; 
+        display:block; 
+        text-align:center;
+        font-size:11px;
+        color:white;
+        }</style>""", 
+        unsafe_allow_html=True) #DERECHOS DE LA APLICACIÓN
 
 #df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
 print(lee_fichero_sesion(name, path_sesiones='dataLogger') for name in glob.glob("*.csv"))
