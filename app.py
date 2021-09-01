@@ -37,10 +37,6 @@ st.markdown("""<style>footer {
         }</style>""", 
         unsafe_allow_html=True) #DERECHOS DE IMAGEN DE LA APLICACIÓN
 
-#df = lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')#Se ejecuta la función
-path="dataLogger/"
-print(glob.glob(path + "*.csv"))
-
 df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="") for name in glob.glob("dataLogger/*.csv"))
 #df_datalogger = pd.concat([lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger'), lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')])#DATAFRAME DE FICHERO DATALOGGER
 #df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')#Se ejecuta la función
