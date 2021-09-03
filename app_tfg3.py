@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 10 15:17:03 2021
+Created on Thu Sep  2 02:08:13 2021
 
 @author: scpgo
 """
@@ -15,18 +15,15 @@ from pygraphtec import lee_fichero_sesion
 from lectura_equipos import lee_meteo
 import glob
 
-#CONFIGURACIÓN DE PÁGINA WEB
 st.set_page_config(page_title='meteoIES-UPM', page_icon='ies-upm_page_config.jpg', layout="wide") #CONFIGURACIÓN DE PÁGINA WEB E INTERFAZ
 
-#FONDO DE INTERFAZ DE PÁGINA WEB
 st.markdown(f"""<style>.reportview-container {{ 
         background-size: 100% 100%;
         background-color: rgba(21,159,228,0.90);
         background-blend-mode: lighten;
         }}</style>""",
-        unsafe_allow_html=True)
+        unsafe_allow_html=True) #FONDO DE LA APLICACIÓN
 
-#DERECHOS DE IMAGEN DE LA APLICACIÓN WEB
 st.markdown("""<style>footer {
         display:block; 
         text-align:center;
@@ -39,53 +36,54 @@ st.markdown("""<style>footer {
         font-size:11px;
         color:white;
         }</style>""", 
-        unsafe_allow_html=True)
+        unsafe_allow_html=True) #DERECHOS DE IMAGEN DE LA APLICACIÓN
 
-#TRATAMIENTO DE DATOS METEOROLÓGICOS
-df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="") for name in glob.glob("dataLogger/*.csv")) #DATAFRAME DATALOGGER
-df_datalogger.columns = df_datalogger.columns + '-DATALOGGER'
+df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="") for name in glob.glob("dataLogger/*.csv"))
+#df_datalogger = pd.concat([lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger'), lee_fichero_sesion("201112-165432.csv", path_sesiones='dataLogger')])#DATAFRAME DE FICHERO DATALOGGER
 #df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')#Se ejecuta la función
-df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/") #DATAFRAME METEO
+#df_meteo_prev = lee_meteo(pd.date_range(start='2020/11/12', end='2020/11/16', freq='1T'),path_estacion="dataLogger/") #DATAFRAME DE FICHERO METEO
+df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/")
 df_meteo.index = df_datalogger.index
+
+df_datalogger.columns = df_datalogger.columns + '-DATALOGGER'
 df_meteo.columns = df_meteo.columns + '-METEO'
-df = pd.concat([df_datalogger,df_meteo], axis=1) #CONCATENACIÓN DE DATAFRAMES DATALOGGER Y METEO
 
-#LOGOTIPOS Y SELECCIÓN DE MODALIDAD DE LA APLICACIÓN WEB
-#ESTRUCTURA
-ies_logo_col, view_mode_col, variables_selection_col1, variables_selection_col2, upm_logo_col = st.beta_columns([2,2,4.9,4.9,1.2])
+df = pd.concat([df_datalogger,df_meteo], axis=1) #CONCATENACIÓN DE DATAFRAMES
 
-with ies_logo_col: #LOGOTIPO IES-UPM
+ies_logo_col, view_mode_col, variables_selection_col1, variables_selection_col2, upm_logo_col = st.beta_columns([2,2,4.9,4.9,1.2]) #ESTRUCTURA DE LA APP POR COLUMNAS PARA ELECCIÓN DE MODALIDAD DE VISTA Y VARIABLES A SELECCIONAR
+
+with upm_logo_col: #IMAGEN DE LA UPM EN LA INTERFAZ
+    st.image("upm-light_2.png", use_column_width=True)    
+with ies_logo_col: #IMAGEN DEL IES-UPM EN LA INTERFAZ
     st.image("IES_2.png", use_column_width=True)
-with upm_logo_col: #LOGOTIPO UPM
-    st.image("upm-light_2.png", use_column_width=True) 
     
-view_mode = view_mode_col.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table')) #SELECCIÓN DE MODALIDAD
+view_mode = view_mode_col.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table')) #MODALIDAD A SELECCIONAR
 
 if view_mode == 'Live': #MODALIDAD 'LIVE'
 
     i=0
 
-    #FILTRO SELECCIÓN DE VARIABLES METEOROLÓGICAS A MONITORIZAR
-    variables_selection_col1.markdown("<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PLOT</p>", unsafe_allow_html=True,) #TÍTULO DEL FILTRO
-    variables_selection = variables_selection_col2.multiselect("", df.columns.tolist()) #SELECCIÓN DE VARIABLES
+    #SELECCIÓN DE SET DE MAGNITUDES
+    variables_selection_col1.markdown("""<p style='display: block; height:100px; line-height:100px; text-align: center; align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PLOT</p>""", unsafe_allow_html=True,) #TÍTULO PARA SELECCIÓN DE MAGNITUDES METEOROLÓGICAS
+    variables_selection = variables_selection_col2.multiselect("", df.columns.tolist()) #SELECCIÓN DE MAGNITUDES A REPRESENTAR
     
-    #VENTANA DESPLEGABLE INFORMATIVA DE VARIABLES METEOROLÓGICAS SELECCIONADAS
-    live_data_sidebar = st.sidebar #CREACIÓN DE VENTANA
-    live_data_sidebar.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>LIVE DATASET", unsafe_allow_html=True,) #TITULO DE INFORMACIÓN EN LA VENTANA
-    for col in variables_selection: #PUBLICACIÓN DE INFORMACIÓN EN VENTANA
-        live_data_sidebar.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #INFORMACIÓN EN VENTANA DESPLEGABLE
-    for j in range(3): #SOLUCIÓN PARA PROBLEMA DE BLOQUE DE COLUMNAS EN VENTANA (problema generado por ejecución consecutiva de modalidades RESUME y LIVE
-        live_data_sidebar.empty()
-
-    #ACTUALIZACIÓN DE INTERFAZ EN TIEMPO REAL
-    live_table_data = st.empty() #VARIABLE PARA ACTUALIZACIÓN DE TABLA
-    live_chart_data = st.empty() #VARIABLE PARA ACTUALIZACIÓN DE GRÁFICA
+    #VENTANA INFORMATIVA DESPLEGABLE
+    data_sidebar_live = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE
+    data_sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>LIVE DATASET", unsafe_allow_html=True,) #TITULO DE INFORMACIÓN EN LA VENTANA DESPLEGABLE
+    for col in variables_selection: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS
+        data_sidebar_live.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #INFORMACIÓN EN LA VENTANA DESPLEGABLE
+    for j in range(3): #SOLUCIÓN PARA PROBLEMA DE EJECUCIÓN CONSECUTIVA ENTRE MODALIDADES (eliminación de bloques de columnas)
+        data_sidebar_live.empty()
 
     #COLECCIONES EXTENSIBLE Y ACTUALIZABLE, EN TIEMPO REAL, DE VALORES A REPRESENTAR GRÁFICAMENTE
     data_collection = deque() #COLECCIÓN A RELLENAR CON VALORES DE LOS DATOS (COLUMNAS) DEL DATAFRAME
     time_collection = deque() #COLECCIÓN A RELLENAR CON INFORMACIÓN TEMPORAL (ÍNDICE) DEL DATAFRAME
     
-    st.empty() #SOLUCIÓN PARA PROBLEMA DE EJECUCIÓN CONSECUTIVA ENTRE MODALIDADES (eliminación de bloques de columnas en modalidad LIVE)
+    #ACTUALIZACIÓN DE PUBLICACIÓN EN TIEMPO REAL
+    live_table_data=st.empty() #PUBLICACIÓN EN TABLA
+    live_chart_data=st.empty() #REPRESENTACIÓN GRÁFICA
+    
+    st.empty() #SOLUCIÓN PARA PROBLEMA DE EJECUCIÓN CONSECUTIVA ENTRE MODALIDADES (eliminación de bloques de columnas)
     
     while True: #BUCLE PARA ACTUALIZACIÓN CONTINUA DE PUBLICACIÓN DE DATOS DE MAGNITUDES SELECCIONADAS
         
@@ -112,7 +110,7 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
             columns = variables_selection #COLUMNAS DEL DATAFRAME
             )
         
-        #REPRESENTACIÓN GRÁFICA, EN TIEMPO REAL, DE MAGNITUDES SELECCIONADAS
+        #REPRESENTACIÓN, EN TIEMPO REAL, DE MAGNITUDES SELECCIONADAS
         if(variables_selection is None or len(variables_selection)==0): 
             time.sleep(1) #TIEMPO NECESARIO PARA QUE LA APLICACIÓN ARRANQUE SIN ERROR DE 'EMPTY CHART'
             live_chart = live_chart_data.line_chart({}) #GRÁFICO VACÍO SI NO SE HAN SELECCIONADO MAGNITUDES A REPRESENTAR
@@ -125,15 +123,14 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
                 
 elif view_mode == 'Resume': #MODALIDAD 'RESUME'
     
-    #FILTRO DE SELECCIÓN MANUAL DE CONJUNTOS DE VARIABLES METEOROLÓGICAS
-    first_variables_set_selected_resume = variables_selection_col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #CREACIÓN DE FILTRO 1
-    second_variables_set_selected_resume = variables_selection_col2.multiselect("SELECT SECOND SET OF VARIABLES", df.columns.tolist()) #CREACIÓN DE FILTRO 2
+    first_variables_set_selected_resume = variables_selection_col1.multiselect("SELECT FIRST SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 1
+    second_variables_set_selected_resume = variables_selection_col2.multiselect("SELECT SECOND SET OF VARIABLES", df.columns.tolist()) #SELECCION DE VARIABLES A REPRESENTAR EN GRÁFICA 2
 
-    #FILTRO DE SELECCIÓN DE SETS PREDEFINIDOS DE VARIABLES METEOROLÓGICAS A MONITORIZAR
+    #FILTRO DE SETS ALTERNATIVOS DE DATOS A REPRESENTAR GRAFICAMENTE
     #ESTRUCTURA
     empty_col1, empty_col2, first_set_selection_col, second_set_selection_col, empty_col3 = st.beta_columns([2,2,4.9,4.9,1.5]) #ESTRUCTURACIÓN DEL FILTRO DE SELECCIÓN DE SETS DE DATOS
 
-    #CREACIÓN DE FILTRO PARA GRÁFICO 1
+    #SELECCIÓN DE DATASETS PARA GRÁFICO 1
     with first_set_selection_col:
         
         with st.beta_expander("Pick a dataset to plot:"):
@@ -183,7 +180,7 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
             elif set_option_1 == "GEONICA: PRECIPITATION": #PRECIPITACIÓN-GEÓNICA
                 df_set_filter_1 = df[[item for item in df.columns if 'Lluvia' in item]] #DATAFRAME INICIAL FILTRADO    
   
-    #CREACIÓN DE FILTRO PARA GRÁFICO 2
+    #SELECCIÓN DE DATASETS PARA GRÁFICO 2
     with second_set_selection_col:
             
         with st.beta_expander("Pick a dataset to plot:"):
@@ -234,47 +231,59 @@ elif view_mode == 'Resume': #MODALIDAD 'RESUME'
             elif set_option_2 == "GEONICA: PRECIPITATION": #PRECIPITACIÓN-GEÓNICA
                 df_set_filter_2 = df[[item for item in df.columns if 'Lluvia' in item]] #DATAFRAME INICIAL FILTRADO
     
-    #VENTANA DESPLEGABLE INFORMATIVA DE SETS PREDEFINIDOS SELECCIONADOS
-    resume_data_sidebar = st.sidebar #CREACIÓN DE VENTANA
-    resume_data_sidebar.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1</p>", unsafe_allow_html=True,) #TÍTULO DE INFORMACIÓN 1, EN VENTANA
-    resume_data_sidebar.markdown("<p style='display: block; text-align: center; font-size: 17px; font-family: calibri'>"+set_option_1, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA, DE ETIQUETA DE SET PREDEFINIDO SELECCIONADO 1
-    resume_data_sidebar.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2</p>", unsafe_allow_html=True,) #TÍTULO DE INFORMACIÓN 2, EN VENTANA
-    resume_data_sidebar.markdown("<p style='display: block; text-align: center; font-size: 17px; font-family: calibri'>"+set_option_2, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA, DE ETIQUETA DE SET PREDEFINIDO SELECCIONADO 2
+    #VENTANA INFORMATIVA DESPLEGABLE A LA IZQUIERDA
+    sidebar_resume = st.sidebar #CREACIÓN DE VENTANA DESPLEGABLE
+    # sidebar_col1, sidebar_col2 = sidebar_resume.beta_columns([1,1]) #ESTRUCTURA POR COLUMNAS
+    # sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,) #TÍTULO 1 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+    # sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,) #TÍTULO 2 DE INFORMACIÓN A PUBLICAR EN VENTANA DESPLEGABLE
+    # for col in df_set_filter_1.columns: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS EN COLUMNA 1
+    #     sidebar_col1.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    # for col in df_set_filter_2.columns: #PUBLICACIÓN DE MAGNITUDES SELECCIONADAS EN COLUMNA 2
+    #     sidebar_col2.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri'>"+col, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 1", unsafe_allow_html=True,)    
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 17px; font-family: calibri'>"+set_option_1, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 20px; font-family: calibri; font-weight: bold'>DATASET 2", unsafe_allow_html=True,)    
+    sidebar_resume.markdown("<p style='display: block; text-align: center; font-size: 17px; font-family: calibri'>"+set_option_2, unsafe_allow_html=True,) #PUBLICACIÓN, EN VENTANA DESPLEGABLE, DE SET PREDETERMINADO DE MAGNITUDES SELECCIONADAS
     
     #FILTRO DE RANGO DE FECHAS                
-    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA
-    titulo_filtro_fechas.markdown("<p style='display: block; height: 0px; line-height: 115px; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</p>", unsafe_allow_html=True,) #TÍTULO DE FILTRO
+    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA DE FILTRO POR FECHAS
+    titulo_filtro_fechas.markdown("<p style='display: block; height: 0px; line-height: justify; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</p>", unsafe_allow_html=True,) #TITULO DE FILTRO POR FECHAS --- line-height:115px;
     fecha_inicio_resume = fecha_inicial.date_input('Start date:', df.index.min(), df.index.min(), df.index.max()) #SELECCIÓN DE FECHA INICIAL
     fecha_fin_resume = fecha_final.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today()) #SELECCIÓN DE FECHA FINAL
 
-    #REPRESENTACIÓN GRÁFICA, EN MODO HISTÓRICO, DE DATAFRAME DE SET PREDEFINIDO DE VARIABLES METEOROLÓGICAS SELECCIONADO
+    #REPRESENTACIÓN GRÁFICA DEL DATAFRAME CON LOS SETS DE DATOS ELEGIDOS
     #ESTRUCTURA
     empty_col1, empty_col2, resume_chart_col1, resume_chart_col2, empty_col3 = st.beta_columns([2,2,4.9,4.9,1.2])
     
     #GRÁFICO 1
-    df_filter_chart1=df_set_filter_1.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME 1 FILTRADO POR RANGO DE FECHAS
-    df_filter_chart1.index=df_filter_chart1.index+timedelta(hours=1) #reajuste temporal de índice de DataFrame 1 para su representación gráfica
-    resume_chart1 = resume_chart_col1.line_chart(df_filter_chart1, use_container_width=True) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 1
+    df_filter_chart1=df_set_filter_1.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME FILTRADO POR FECHAS
+    df_filter_chart1.index=df_filter_chart1.index+timedelta(hours=1)
+    #chart1_title = grafico1_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_1, unsafe_allow_html=True,) #TÍTULO DE GRÁFICO 1
+    #chart1 = grafico1_resume.empty() #CREACIÓN DE GRÁFICO, INICIALMENTE VACÍO
+    resume_chart1 = resume_chart_col1.line_chart(df_filter_chart1, use_container_width=True) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
 
     #GRÁFICO 2
     df_filter_chart2=df_set_filter_2.loc[fecha_inicio_resume:fecha_fin_resume] #DATAFRAME 2 FILTRADO POR FECHAS
-    df_filter_chart2.index=df_filter_chart2.index+timedelta(hours=1) #reajuste temporal de índice de DataFrame 2 para su representación gráfica
-    resume_chart2 = resume_chart_col2.line_chart(df_filter_chart2, use_container_width=True) #REPRESENTACIÓN GRÁFICA DE DATAFRAME 2
+    df_filter_chart2.index=df_filter_chart2.index+timedelta(hours=1)
+    #chart2_title = grafico2_resume.markdown("<p style='display: block; text-align: center; font-size: 14px; font-family: calibri; font-weight: bold'>"+set_option_2, unsafe_allow_html=True,)
+    #chart2 = grafico2_resume.empty() #CREACIÓN DE GRÁFICO, INICIALMENTE VACÍO
+    resume_chart2 = resume_chart_col2.line_chart(df_filter_chart2, use_container_width=True) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
      
 elif view_mode == 'Data Table': #MODALIDAD 'DATA TABLE'
     
-    #FILTRO DE SELECCIÓN DE VARIABLES METEOROlÓGICAS A REPRESENTAR EN TABLA
-    variables_selection_col1.markdown("<p style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PUBLISH ON TABLE</p>", unsafe_allow_html=True,) #TÍTULO DEL FILTRO
-    variables_set_selected_data_table = variables_selection_col2.multiselect(" ", df.columns.tolist()) #CREACIÓN DEL FILTRO
+    #FILTRO DE SELECCIÓN DE VARIABLES
+    variables_selection_col1.markdown("""<a style='display: block; height:100px; line-height:100px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>SELECT DATASET TO PUBLISH ON TABLE</a>""", unsafe_allow_html=True,) #TÍTULO DEL FILTRO DE SELECCIÓN DE VARIABLES A REPRESENTAR
+    variables_set_selected_data_table = variables_selection_col2.multiselect(" ", df.columns.tolist()) #SELECCIÓN DEL SET DE VARIABLES A REPRESENTAR EN MODO TABLA
 
     #FILTRO DE RANGO DE FECHAS
-    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA
-    titulo_filtro_fechas.markdown("<p style='display: block; height:115px; line-height:115px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</p>", unsafe_allow_html=True,) #TíTULO DEL FILTRO
+    titulo_filtro_fechas, fecha_inicial, fecha_final = st.beta_columns([1,2,2]) #ESTRUCTURA DEL FILTRO DE RANGO DE FECHAS
+    titulo_filtro_fechas.markdown("""<a style='display: block; height:115px; line-height:115px; text-align: center; font-size: 25px; font-family: calibri; font-weight: bold'>PICK DATE RANGE</a>""", unsafe_allow_html=True,) #TíTULO DE FILTRO DE RANGO DE FECHAS
     fecha_inicio_table = fecha_inicial.date_input('Start date:', df.index.min(), df.index.min(), df.index.max()) #SELECCIÓN DE FECHA INICIAL
     fecha_fin_table = fecha_final.date_input('End date:', df.index.max(), df.index.min()+timedelta(days=1), datetime.date.today()) #SELECCIÓN DE FECHA FINAL
 
-    #REPRESENTACIÓN, EN TABLA Y MODO HISTÓRICO, DE DATAFRAME DE VARIABLES METEOROLÓGICAS SELECCIONADAS
-    df_filtered_table=df.loc[fecha_inicio_table:fecha_fin_table] #DATAFRAME FILTRADO POR RANGO DE FECHAS
-    df_filtered_table.index=df_filtered_table.index.strftime("%d/%m/%y\n%H:%M:%S") #PERSONALIZACIÓN DE ÍNDICE DE DATAFRAME
+    #REPRESENTACIÓN EN MODO TABLA DEL DATAFRAME CON EL SET DE DATOS ELEGIDO
+    df_filtered_table=df.loc[fecha_inicio_table:fecha_fin_table] #DATAFRAME FILTRADO POR FECHAS
+    df_filtered_table.index=df_filtered_table.index.strftime("%d/%m/%y\n%H:%M:%S")
+    
     if len(variables_set_selected_data_table)>0:
-        data_table = st.table(df_filtered_table[variables_set_selected_data_table].style.set_precision(2)) #REPRESENTACIÓN, EN TABLA, DE DATAFRAME
+        data_table = st.table(df_filtered_table[variables_set_selected_data_table].style.set_precision(2)) #CREACIÓN DE TABLA CON VALORES DE MAGNITUDES SELECCIONADAS Y CON PRECISIÓN DE 2 DECIMALES
