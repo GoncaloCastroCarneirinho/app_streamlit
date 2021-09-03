@@ -16,7 +16,7 @@ from lectura_equipos import lee_meteo
 import glob
 
 #CONFIGURACIÓN DE PÁGINA WEB
-st.set_page_config(page_title='meteoIES-UPM', page_icon='ies-upm_page_config.jpg', layout="wide") #CONFIGURACIÓN DE PÁGINA WEB E INTERFAZ
+st.set_page_config(page_title='meteoLITeIES-UPM', page_icon='ies-upm_page_config.jpg', layout="wide") #CONFIGURACIÓN DE PÁGINA WEB E INTERFAZ
 
 #FONDO DE INTERFAZ DE PÁGINA WEB
 st.markdown(f"""<style>.reportview-container {{ 
