@@ -98,27 +98,27 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
         data_collection.append(df[variables_selection].values[i]) #RELLENO DE data_collection CON VALORES DE DATOS DE DATAFRAME INICIAL
         time_collection.append(df.index[i]+timedelta(hours=1)) #RELLENO DE time_collection CON INFORMACIÓN DE ÍNDICE DE DATAFRAME INICIAL
         
-        #DATAFRAME PARA REPRESENTACIÓN GRÁFICA EN TIEMPO REAL
+        #DATAFRAME PARA REPRESENTACIÓN GRÁFICA, EN TIEMPO REAL
         live_chart_dataframe = pd.DataFrame(
              data_collection, #VALORES DE LOS DATOS DEL DATAFRAME
-             index = time_collection, #FILAS O ÍNDICE DEL DATAFRAME
+             index = time_collection, #ÍNDICE DEL DATAFRAME
              columns = variables_selection #COLUMNAS DEL DATAFRAME
              )
         
-        #DATAFRAME PARA PUBLICACIÓN EN TABLA EN TIEMPO REAL
+        #DATAFRAME PARA PUBLICACIÓN EN TABLA, EN TIEMPO REAL
         live_table_dataframe = pd.DataFrame(
             [df[variables_selection].values[i]], #VALORES DE LOS DATOS DEL DATAFRAME
-            index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')], #FILAS O ÍNDICE DEL DATAFRAME
+            index = ["At: " + df.index[i].strftime('%d/%m/%y - %H:%M:%S')], #ÍNDICE DEL DATAFRAME
             columns = variables_selection #COLUMNAS DEL DATAFRAME
             )
         
-        #REPRESENTACIÓN GRÁFICA, EN TIEMPO REAL, DE MAGNITUDES SELECCIONADAS
+        #REPRESENTACIÓN, EN TIEMPO REAL, DE DATAFRAMES DE VARIABLES METEOROLÓGICAS SELECCIONADAS
         if(variables_selection is None or len(variables_selection)==0): 
             time.sleep(1) #TIEMPO NECESARIO PARA QUE LA APLICACIÓN ARRANQUE SIN ERROR DE 'EMPTY CHART'
             live_chart = live_chart_data.line_chart({}) #GRÁFICO VACÍO SI NO SE HAN SELECCIONADO MAGNITUDES A REPRESENTAR
         else:
-            live_chart = live_chart_data.line_chart(live_chart_dataframe) #REPRESENTACIÓN GRÁFICA DE MAGNITUDES
-            live_table_data.table(live_table_dataframe.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2)) #PUBLICACIÓN, EN TABLA, DE MAGNITUDES Y PRECISIÓN DE 2 DECIMALES EN SUS VALORES
+            live_chart = live_chart_data.line_chart(live_chart_dataframe) #REPRESENTACIÓN GRÁFICA DE DATAFRAME
+            live_table_data.table(live_table_dataframe.style.set_properties(**{'font-size': '15px','text-align': 'right'}).set_precision(2)) #REPRESENTACIÓN, EN TABLA, DE DATAFRAME
             
             for j in range(1):
                 time.sleep(1) #TIEMPO DE ACTUALIZACIÓN DE GRÁFICO Y TABLA (SIMULACIÓN DE TIEMPO REAL)
