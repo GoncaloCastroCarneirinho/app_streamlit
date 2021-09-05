@@ -12,7 +12,9 @@ from datetime import timedelta
 import time
 import datetime
 from pygraphtec import lee_fichero_sesion
+#from pygraphtec import lee_ultimos_datos
 from lectura_equipos import lee_meteo
+from pygeonica.estacion import lee_canales
 import glob
 
 #CONFIGURACIÓN DE PÁGINA WEB
@@ -40,14 +42,20 @@ st.markdown("""<style>footer {
         color:white;
         }</style>""", 
         unsafe_allow_html=True)
+    
+meteo_data = {}
+for id_estacion in [316, 2169]:
+    meteo_data.update(lee_canales(id_estacion)[1])
+
+#datalogger_data = lee_ultimos_datos()
 
 #TRATAMIENTO DE DATOS METEOROLÓGICOS
 df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="") for name in glob.glob("dataLogger/*.csv")) #DATAFRAME DATALOGGER
-df_datalogger.columns = df_datalogger.columns + '-DATALOGGER'
+df_datalogger.columns = 'DATALOGGER: ' + df_datalogger.columns
 #df_datalogger = lee_fichero_sesion("201112-180010.csv", path_sesiones='dataLogger')#Se ejecuta la función
 df_meteo = lee_meteo(df_datalogger.index.round('T'),path_estacion="dataLogger/") #DATAFRAME METEO
 df_meteo.index = df_datalogger.index
-df_meteo.columns = df_meteo.columns + '-METEO'
+df_meteo.columns = 'METEO: ' + df_meteo.columns
 df = pd.concat([df_datalogger,df_meteo], axis=1) #CONCATENACIÓN DE DATAFRAMES DATALOGGER Y METEO
 
 #LOGOTIPOS Y SELECCIÓN DE MODALIDAD DE LA APLICACIÓN WEB
@@ -277,4 +285,10 @@ elif view_mode == 'Data Table': #MODALIDAD 'DATA TABLE'
     df_filtered_table=df.loc[fecha_inicio_table:fecha_fin_table] #DATAFRAME FILTRADO POR RANGO DE FECHAS
     df_filtered_table.index=df_filtered_table.index.strftime("%d/%m/%y\n%H:%M:%S") #PERSONALIZACIÓN DE ÍNDICE DE DATAFRAME
     if len(variables_set_selected_data_table)>0:
-        data_table = st.table(df_filtered_table[variables_set_selected_data_table].style.set_precision(2)) #REPRESENTACIÓN, EN TABLA, DE DATAFRAME
+        
+        styles = [
+            dict(selector="th", props=('text-align', 'center')),
+            dict(selector="td", props=('text-align', 'center'))
+        ]
+        
+        data_table = st.table(df_filtered_table[variables_set_selected_data_table].style.set_precision(2).set_table_styles(styles)) #REPRESENTACIÓN, EN TABLA, DE DATAFRAME
