@@ -42,40 +42,40 @@ st.markdown("""<style>footer {
         }</style>""", 
         unsafe_allow_html=True)
 
-# #TRATAMIENTO DE DATOS DE ESTACIONES METEOROLÓGICAS Y MÓDULOS FOTOVOLTAICOS DEL IES-UPM
-# #GENERACIÓN DE DATAFRAMES DE DATOS - CON CONEXIÓN A RED DEL IES-UPM (MODALIDAD LIVE)
-def lee_meteo_live(): #FUNCIÓN PARA CONECTAR A LA RED Y AGRUPAR DATOS OBTENIDOS
-    # Diccionario con los nombres de las variables que se desean modificar. Nombre en la estacion: Nombre que se desea que tenga la variable en el fichero generado
-    NOMBRES_METEO = {
-        "Estado" : 'Limpieza',
-        "PIRAN.1" : 'Gh',                  # Global Horizontal
-        "PIRAN.2" : 'Dh',                  # Difusa Horizontal
-        "PIRAN.3" : 'G(41)',               # Global 41ยบ
-        "PIRAN.4" : 'Gn',                  # Global Normal
-        "R.Directa1" : 'Bn',               # Directa Normal
-        "R.Directa2" : 'Bn_2',             # Directa Normal 2
-        "R.Infr.Inc" : 'Pirgeo',           # Pirgeometro
-        "T.Carcasa" : 'Temp_Pirgeo',       # Temperatura Carcasa Pirgeometro
-    }
-    dd = {}
-    for id_estacion in [316, 2169]:
-        dd.update(lee_canales(id_estacion)[1])
+# # #TRATAMIENTO DE DATOS DE ESTACIONES METEOROLÓGICAS Y MÓDULOS FOTOVOLTAICOS DEL IES-UPM
+# # #GENERACIÓN DE DATAFRAMES DE DATOS - CON CONEXIÓN A RED DEL IES-UPM (MODALIDAD LIVE)
+# def lee_meteo_live(): #FUNCIÓN PARA CONECTAR A LA RED Y AGRUPAR DATOS OBTENIDOS
+#     # Diccionario con los nombres de las variables que se desean modificar. Nombre en la estacion: Nombre que se desea que tenga la variable en el fichero generado
+#     NOMBRES_METEO = {
+#         "Estado" : 'Limpieza',
+#         "PIRAN.1" : 'Gh',                  # Global Horizontal
+#         "PIRAN.2" : 'Dh',                  # Difusa Horizontal
+#         "PIRAN.3" : 'G(41)',               # Global 41ยบ
+#         "PIRAN.4" : 'Gn',                  # Global Normal
+#         "R.Directa1" : 'Bn',               # Directa Normal
+#         "R.Directa2" : 'Bn_2',             # Directa Normal 2
+#         "R.Infr.Inc" : 'Pirgeo',           # Pirgeometro
+#         "T.Carcasa" : 'Temp_Pirgeo',       # Temperatura Carcasa Pirgeometro
+#     }
+#     dd = {}
+#     for id_estacion in [316, 2169]:
+#         dd.update(lee_canales(id_estacion)[1])
         
-    meteo_data = pd.Series(data=[d[0] for d in dd.values()], index=dd.keys())
-    meteo_data.name = pd.Timestamp.now()
-    meteo_data = meteo_data.rename(NOMBRES_METEO)
+#     meteo_data = pd.Series(data=[d[0] for d in dd.values()], index=dd.keys())
+#     meteo_data.name = pd.Timestamp.now()
+#     meteo_data = meteo_data.rename(NOMBRES_METEO)
     
-    return meteo_data
+#     return meteo_data
 
-data_meteo_live = lee_meteo_live() #SERIE DE DATOS - ESTACIÓN METEOROLÓGICA
-data_datalogger_live = lee_ultimos_datos() #SERIE DE DATOS - MÓDULOS FOTOVOLTAICOS
-data_live = pd.concat([data_datalogger_live, data_meteo_live], axis=0) #CONCATENACIÓN DE SERIES DE DATOS
+# data_meteo_live = lee_meteo_live() #SERIE DE DATOS - ESTACIÓN METEOROLÓGICA
+# data_datalogger_live = lee_ultimos_datos() #SERIE DE DATOS - MÓDULOS FOTOVOLTAICOS
+# data_live = pd.concat([data_datalogger_live, data_meteo_live], axis=0) #CONCATENACIÓN DE SERIES DE DATOS
 
-df_live = pd.DataFrame(
-                [data_live.data], #VALORES DE LOS DATOS DEL DATAFRAME
-                index = ["At: " + pd.Timestamp.now().strftime('%d/%m/%y - %H:%M:%S')], #ÍNDICE DEL DATAFRAME
-                columns = data_live.index #COLUMNAS DEL DATAFRAME
-                )
+# df_live = pd.DataFrame(
+#                 [data_live.data], #VALORES DE LOS DATOS DEL DATAFRAME
+#                 index = ["At: " + pd.Timestamp.now().strftime('%d/%m/%y - %H:%M:%S')], #ÍNDICE DEL DATAFRAME
+#                 columns = data_live.index #COLUMNAS DEL DATAFRAME
+#                 )
 
 #GENERACIÓN DE DATAFRAMES - SIN CONEXIÓN A RED DEL IES-UPM (MODALIDADES LIVE, RESUME Y DATA_TABLE)
 df_datalogger = pd.concat(lee_fichero_sesion(name, path_sesiones="") for name in glob.glob("dataLogger/*.csv")) #DATAFRAME DATOS - MÓDULO FOTOVOLTAICO IES-UPM
@@ -90,9 +90,9 @@ df = pd.concat([df_datalogger,df_meteo], axis=1) #CONCATENACIÓN DE DATAFRAMES
 ies_logo_col, view_mode_col, variables_selection_col1, variables_selection_col2, upm_logo_col = st.beta_columns([2,2,4.9,4.9,1.2])
 
 with ies_logo_col: #LOGOTIPO IES-UPM
-    st.image("IES_2.png", use_column_width=True)
+    st.image("logo_IES.png", use_column_width=True)
 with upm_logo_col: #LOGOTIPO UPM
-    st.image("upm-light_2.png", use_column_width=True) 
+    st.image("logo_upm.png", use_column_width=True) 
     
 view_mode = view_mode_col.radio("SELECT VIEW MODE", ('Live', 'Resume', 'Data Table')) #SELECCIÓN DE MODALIDAD
 
@@ -103,7 +103,7 @@ if view_mode == 'Live': #MODALIDAD 'LIVE'
     df_live_mode = pd.DataFrame()
     
     if MODO_DESARROLLO is True:
-        df_live_mode=df_live #DATAFRAME - TIEMPO REAL
+        df_live_mode=df #DATAFRAME - TIEMPO REAL
     else:
         df_live_mode=df #DATAFRAME - SIMULACIÓN DE TIEMPO REAL
     
