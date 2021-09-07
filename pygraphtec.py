@@ -117,7 +117,9 @@ def lee_ultima_sesion(ip=IP_DATALOGGER):
         data = lee_fichero_gl840(buffer_data)
     
     return data
-
+    
+def lee_ultimos_datos(ip=IP_DATALOGGER):
+    return lee_ultima_sesion(ip).iloc[-1]
 
 def diferencia_segundos_comprueba_hora_ftp(ip=IP_DATALOGGER):
     fichero = nombre_fichero_ultima_sesion(ip)
